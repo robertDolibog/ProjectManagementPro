@@ -2,18 +2,15 @@ version: "3.8"
 services:
   app:
     build: .
+    command: sh -c "npx prisma migrate deploy && npx nodemon main.js"
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql://admin:password@db:5432/mydatabase
-    command: ["npx", "nodemon", "--legacy-watch", "main.js"]
-
+      - DATABASE_URL=postgresql://admin:password@db:5432/mydatabase?schema=public
   db:
-    image: postgres
+    image: postgres:16
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
