@@ -1,0 +1,23 @@
+{
+  "name": "express_js_sprint2",
+  "version": "1.0.0",
+  "description": "A simple Project management tool using ExpressJS",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon main.js"
+  },
+  "author": "Marlin Jai Pohl & Robert Dolibog",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^5.12.1",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-ejs-layouts": "^2.5.1",
+    "nodemon": "^3.1.0",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "prisma": "^5.12.1"
+  }
+}
