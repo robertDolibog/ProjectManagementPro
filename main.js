@@ -1,3 +1,4 @@
+global.SESSION_SECRET = 'LvCPTSUqg6';
 require("dotenv").config();
 
 const port = 3000,
@@ -13,7 +14,7 @@ const cookieParser = require("cookie-parser");
 app.set("view engine", "ejs");
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: global.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: process.env.NODE_ENV === "production" },
