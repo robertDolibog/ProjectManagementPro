@@ -49,6 +49,7 @@ router.put("/projects/:id", async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
   const project = await db.updateProject(id, title, content);
+  console.log("updateProject", project);
   res.json(project);
 });
 

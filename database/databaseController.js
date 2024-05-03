@@ -86,6 +86,7 @@ async function createProject(title, content, session) {
 
 async function updateProject(id, title, content) {
   id = Number(id);
+  console.log("props in update project", id, title, content);
   const project = await prisma.project.update({
     where: { id },
     data: {

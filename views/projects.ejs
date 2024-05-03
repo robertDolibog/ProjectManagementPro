@@ -44,18 +44,19 @@
 
     $('.update-project-button').click(function() {
       const id = $(this).data('id');
-      const name = prompt('Enter new name');
-      const description = prompt('Enter new description');
+      const title = prompt('Enter new title');
+      const content = prompt('Enter new content');
       $.ajax({
-        url: '/projects/' + id,
-        type: 'PUT',
-        data: { name, description },
-        success: function(data) {
-          // Refresh the page to see the updated project
-          location.reload();
-        }
-      });
+      url: '/projects/' + id,
+      type: 'PUT',
+      data: { title, content },
+      success: function(data) {
+      // Refresh the page to see the updated project
+       location.reload();
+      }
+     });
     });
+      
 
     $('.delete-project-button').click(function() {
       const id = $(this).data('id');
