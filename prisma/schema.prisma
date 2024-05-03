@@ -17,24 +17,24 @@ datasource db {
     published Boolean  @default(false)
     author    User     @relation("ProjectToUser", fields: [userId], references: [id])
     userId  Int @map("userId")
+    tasks Task[]
   }
 
   model Task {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    title     String   @db.VarChar(255)
-    content   String?
-    published Boolean  @default(false)
-    author    User     @relation("TaskToUser", fields: [userId], references: [id])
-    userId  Int @map("userId")
-  }
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @db.VarChar(255)
+  content   String?
+  published Boolean  @default(false)
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+}
 
 model User {
-    id       Int       @id @default(autoincrement())
-    email    String    @unique
-    name     String?
-    password String?
-    projects Project[] @relation("ProjectToUser")
-    tasks    Task[]    @relation("TaskToUser")
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  name     String?
+  password String?
+  projects Project[] @relation("ProjectToUser")
 }

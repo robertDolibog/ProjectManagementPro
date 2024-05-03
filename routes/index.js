@@ -82,6 +82,37 @@ router.get(
     }
   }
 );
+router.get("/projects/:projectId", async (req, res) => {
+  const projectId = req.params.projectId;
+  try {
+      const project = await db.getProjectById(projectId); 
+      const tasks = await db.getTasksByProjectId(projectId);
+      res.render("tasks", { project: project, tasks: tasks });
+  } catch (error) {
+      res.status(500).send("Error loading tasks");
+  }
+});
+
+router.post("/projects/:projectId/tasks", async (req, res) => {
+  const { title, content } = req.body;
+  const projectId = req.params.projectId;
+  try {
+      const project = await db.getProjectById(projectId); // Make sure this method exists
+      const task = await db.createTask(title, content, project, req.session);
+      res.redirect(`/projects/${projectId}/tasks`); // Redirect to view tasks
+  } catch (error) {
+      console.error("Failed to create task:", error);
+      res.status(500).send("Failed to create task");
+  }
+});
+
+
+
+router.get("/projects/:projectId/tasks", async (req, res) => {
+  const { projectId } = req.params;
+  const tasks = await db.getTasksByProjectId(projectId);
+  res.json(tasks);
+});
 
 router.get("/name/:myName", homeController.respondWithName);
 

@@ -39,6 +39,17 @@ async function authenticateUser(email, password) {
   // If the user is not found or the passwords don't match, return null
   return null;
 }
+async function getProjectById(projectId) {
+  const id = parseInt(projectId);
+  if (isNaN(id)) {
+      console.error("Invalid project ID:", projectId);
+      return null;
+  }
+  return await prisma.project.findUnique({
+      where: { id: id },
+  });
+}
+
 async function getProjectsByUserId(userId) {
   const parsedUserId = parseInt(userId);
 
@@ -55,6 +66,19 @@ async function getProjectsByUserId(userId) {
 
   return projects || [];
 }
+async function getTasksByProjectId(projectId) {
+  const parsedProjectId = parseInt(projectId);
+  if (isNaN(parsedProjectId)) {
+    // projectId cannot be converted to an integer
+    return [];
+  }
+  const tasks = await prisma.task.findMany({
+    where: {
+      projectId: parsedProjectId,
+    },
+  });
+  return tasks || [];
+}
 
 async function createProject(title, content, session) {
   if (!title || !content) {
@@ -64,7 +88,6 @@ async function createProject(title, content, session) {
       content
     );
   }
-
   const userId = session.user.userId;
   const email = session.user.email;
 
@@ -83,6 +106,33 @@ async function createProject(title, content, session) {
   });
   return project;
 }
+async function createTask(title, content, project, session) {
+  if (!title || !content) {
+    console.error(
+      "Title, content, and userId are required. Received:",
+      title,
+      content
+    );
+  }
+  const userId = session.user.userId;
+  const email = session.user.email;
+
+  const newTask = await prisma.task.create({
+    data: {
+      title: title,
+      content: content,
+      projectId: project.id,
+      author: {
+        connect: {
+          id: userId,
+          email: email,
+        },
+      },
+    }
+  });
+  return newTask;
+  }
+ 
 
 async function updateProject(id, title, content) {
   id = Number(id);
@@ -112,4 +162,7 @@ module.exports = {
   createProject,
   updateProject,
   deleteProject,
+  getProjectById,
+  getTasksByProjectId,
+  createTask,
 };

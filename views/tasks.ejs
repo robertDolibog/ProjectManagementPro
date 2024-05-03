@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tasks Dashboard</title>
+</head>
+<body>
+    <h1>Tasks for Project: <%= project.title %></h1>
+    <ul>
+        <% tasks.forEach(function(task) { %>
+            <li><%= task.title %> - <%= task.content %></li>
+        <% }) %>
+    </ul>
+    <h2>Add a New Task</h2>
+    <form action="/projects/<%= project.id %>/tasks" method="POST">
+        <label for="title">Task Title:</label>
+        <input type="text" id="title" name="title" required>
+        <label for="content">Description:</label>
+        <textarea id="content" name="content" required></textarea>
+        <button type="submit">Add Task</button>
+    </form>
+    <a href="/projects">Back to Projects</a>
+</body>
+</html>
