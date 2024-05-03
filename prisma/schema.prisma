@@ -15,8 +15,9 @@ datasource db {
     title     String   @db.VarChar(255)
     content   String?
     published Boolean  @default(false)
-    author    User     @relation("ProjectToUser", fields: [authorId], references: [id])
-    authorId  Int
+    author    User     @relation("ProjectToUser", fields: [userId], references: [id])
+    userId    Int      @map("userId")
+    tasks     Task[]   @relation("ProjectToTask")
   }
 
   model Task {
@@ -26,8 +27,10 @@ datasource db {
     title     String   @db.VarChar(255)
     content   String?
     published Boolean  @default(false)
-    author    User     @relation("TaskToUser", fields: [authorId], references: [id])
-    authorId  Int
+    author    User     @relation("TaskToUser", fields: [userId], references: [id])
+    userId    Int      @map("userId")
+    projectId Int      @map("projectId")
+    project   Project  @relation("ProjectToTask", fields: [projectId], references: [id])
   }
 
 model User {

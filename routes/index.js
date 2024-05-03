@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db"); // Import the database connection
+const db = require("../database/databaseController"); // Import the database connection
 const mainController = require("../controllers/mainController"); // Import the main controller
 
 const homeController = require("../controllers/homeController");
 
 const userController = require("../controllers/userController");
+
+const databaseController = require("../database/databaseController");
 
 router.use(
   express.urlencoded({
@@ -25,8 +27,10 @@ router.use((req, res, next) => {
 router.post("/signup", userController.signup);
 router.get("/signup", userController.signupPage);
 
+router.get("/signin", userController.signInPage);
+router.post("/signin", userController.signIn);
 
-router.get("/signin", userController.signinPage);
+router.get("/logout", userController.logout);
 
 router.get("/", mainController.mainPage);
 
@@ -34,8 +38,42 @@ router.get("/about", (req, res) => {
   res.send("Hello from the about route!");
 });
 
-router.get("/projects", (req, res) => {
-  res.send("This is the projects route");
+router.post("/projects", async (req, res) => {
+  const { title, content } = req.body;
+
+  console.log(req.session);
+  const project = await db.createProject(title, content, req.session);
+  res.json(project);
+});
+
+router.put("/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+  const project = await db.updateProject(id, title, content);
+  console.log("updateProject", project);
+  res.json(project);
+});
+
+router.delete("/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  const project = await db.deleteProject(id);
+  res.json(project);
+});
+
+router.get("/projects", userController.authenticate, async (req, res) => {
+  console.log("Received UserId:", req.session.user.id);
+  let id = req.session.user.id;
+
+  try {
+    // Fetch the projects for the authenticated user
+    const projects = await databaseController.getProjectsByUserId(id);
+
+    // Render the projects page with the fetched projects
+    res.render("projects", { projects, userId: id });
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    res.status(500).json({ message: "Error fetching projects in index" });
+  }
 });
 
 router.get("/name/:myName", homeController.respondWithName);

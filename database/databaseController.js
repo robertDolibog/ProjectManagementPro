@@ -1,37 +1,186 @@
 const { PrismaClient } = require("@prisma/client");
+const argon2 = require("argon2");
+const { request } = require("express");
 
 const prisma = new PrismaClient();
 
-async function main() {
-  // ... you will write your Prisma Client queries here
-
-  const allUsers = await prisma.user.findMany();
-
-  console.dir(allUsers, { depth: null });
-}
 async function createUser(username, email, password) {
-  const newUser = await prisma.user.create({
-    data: {
-      name: username,
+  const hashedPassword = await argon2.hash(password);
+
+  try {
+    const newUser = await prisma.user.create({
+      data: {
+        name: username,
+        email: email,
+        password: hashedPassword,
+      },
+    });
+
+    return newUser;
+  } catch (error) {
+    console.log("Error instance: ", error.constructor.name); // Logs the actual instance of the error
+    console.log("Error code: ", error.code); // Logs the actual error code
+    throw new Error("A user account with this email already exists.");
+  }
+}
+
+async function authenticateUser(email, password) {
+  // Find the user with the given email
+  const user = await prisma.user.findUnique({
+    where: {
       email: email,
-      password: password,
     },
   });
 
-  return newUser;
+  if (user) {
+    // If the user is found, compare the provided password with the stored password
+    const passwordMatch = await argon2.verify(user.password, password);
+
+    if (passwordMatch) {
+      // If the passwords match, return the user
+      return user;
+    }
+  }
+
+  // If the user is not found or the passwords don't match, return null
+  return null;
+}
+async function getProjectsByUserId(userId) {
+  const parsedUserId = parseInt(userId);
+
+  if (isNaN(parsedUserId)) {
+    // userId cannot be converted to an integer
+    return [];
+  }
+
+  const projects = await prisma.project.findMany({
+    where: {
+      userId: parsedUserId,
+    },
+  });
+
+  return projects || [];
 }
 
+async function createProject(title, content, session) {
+  if (!title || !content) {
+    console.error(
+      "Title, content, and userId are required. Received:",
+      title,
+      content
+    );
+  }
+
+  const userId = session.user.id;
+
+  const project = await prisma.project.create({
+    data: {
+      title: title,
+      content: content,
+      userId: userId, // Connect the User to the Project through the userId field
+    },
+  });
+  return project;
+}
+
+async function updateProject(id, title, content) {
+  id = Number(id);
+  console.log("props in update project", id, title, content);
+  const project = await prisma.project.update({
+    where: { id },
+    data: {
+      title,
+      content,
+    },
+  });
+  return project;
+}
+
+async function deleteProject(id) {
+  id = Number(id);
+  const project = await prisma.project.delete({
+    where: { id },
+  });
+  return project;
+}
+
+// Create a new task
+exports.createTask = async (req, res) => {
+  const { title, content, projectId } = req.body;
+  const userId = req.session.user.id;
+
+  try {
+    const task = await prisma.task.create({
+      data: {
+        title,
+        content,
+        projectId,
+        author: { connect: { id: userId } },
+      },
+    });
+
+    res.status(201).json(task);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to create task: ${error.message}` });
+  }
+};
+
+// Get all tasks
+exports.getTasks = async (req, res) => {
+  try {
+    const tasks = await prisma.task.findMany();
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch tasks: ${error.message}` });
+  }
+};
+
+// Get a single task by ID
+exports.getTask = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const task = await prisma.task.findUnique({ where: { id: Number(id) } });
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch task: ${error.message}` });
+  }
+};
+
+// Update a task
+exports.updateTask = async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+
+  try {
+    const task = await prisma.task.update({
+      where: { id: Number(id) },
+      data: { title, content },
+    });
+
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to update task: ${error.message}` });
+  }
+};
+
+// Delete a task
+exports.deleteTask = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.task.delete({ where: { id: Number(id) } });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: `Failed to delete task: ${error.message}` });
+  }
+};
 
 module.exports = {
   createUser,
+  authenticateUser,
+  getProjectsByUserId,
+  createProject,
+  updateProject,
+  deleteProject,
 };
-
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
