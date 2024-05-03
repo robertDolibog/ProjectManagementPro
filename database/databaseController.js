@@ -7,15 +7,21 @@ const prisma = new PrismaClient();
 async function createUser(username, email, password) {
   const hashedPassword = await argon2.hash(password);
 
-  const newUser = await prisma.user.create({
-    data: {
-      name: username,
-      email: email,
-      password: hashedPassword,
-    },
-  });
+  try {
+    const newUser = await prisma.user.create({
+      data: {
+        name: username,
+        email: email,
+        password: hashedPassword,
+      },
+    });
 
-  return newUser;
+    return newUser;
+  } catch (error) {
+    console.log("Error instance: ", error.constructor.name); // Logs the actual instance of the error
+    console.log("Error code: ", error.code); // Logs the actual error code
+    throw new Error("A user account with this email already exists.");
+  }
 }
 
 async function authenticateUser(email, password) {
@@ -65,20 +71,13 @@ async function createProject(title, content, session) {
     );
   }
 
-  const userId = session.user.userId;
-  const email = session.user.email;
+  const userId = session.user.id;
 
   const project = await prisma.project.create({
     data: {
       title: title,
       content: content,
-      userId: userId,
-      author: {
-        connect: {
-          id: userId,
-          email: email,
-        },
-      },
+      userId: userId, // Connect the User to the Project through the userId field
     },
   });
   return project;
@@ -104,6 +103,78 @@ async function deleteProject(id) {
   });
   return project;
 }
+
+// Create a new task
+exports.createTask = async (req, res) => {
+  const { title, content, projectId } = req.body;
+  const userId = req.session.user.id;
+
+  try {
+    const task = await prisma.task.create({
+      data: {
+        title,
+        content,
+        projectId,
+        author: { connect: { id: userId } },
+      },
+    });
+
+    res.status(201).json(task);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to create task: ${error.message}` });
+  }
+};
+
+// Get all tasks
+exports.getTasks = async (req, res) => {
+  try {
+    const tasks = await prisma.task.findMany();
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch tasks: ${error.message}` });
+  }
+};
+
+// Get a single task by ID
+exports.getTask = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const task = await prisma.task.findUnique({ where: { id: Number(id) } });
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to fetch task: ${error.message}` });
+  }
+};
+
+// Update a task
+exports.updateTask = async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+
+  try {
+    const task = await prisma.task.update({
+      where: { id: Number(id) },
+      data: { title, content },
+    });
+
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({ error: `Failed to update task: ${error.message}` });
+  }
+};
+
+// Delete a task
+exports.deleteTask = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.task.delete({ where: { id: Number(id) } });
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: `Failed to delete task: ${error.message}` });
+  }
+};
 
 module.exports = {
   createUser,

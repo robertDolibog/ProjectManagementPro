@@ -40,7 +40,8 @@ router.get("/about", (req, res) => {
 
 router.post("/projects", async (req, res) => {
   const { title, content } = req.body;
-  const userId = req.session.userId;
+
+  console.log(req.session);
   const project = await db.createProject(title, content, req.session);
   res.json(project);
 });
@@ -59,29 +60,21 @@ router.delete("/projects/:id", async (req, res) => {
   res.json(project);
 });
 
-router.get(
-  "/projects/:userId",
-  userController.authenticate,
-  async (req, res) => {
-    if (!req.params.userId) {
-      console.error("UserId parameter is undefined");
-      return res.status(400).send("UserId is required");
-    }
-    console.log("Received UserId:", req.params.userId);
-    let id = req.params.userId;
+router.get("/projects", userController.authenticate, async (req, res) => {
+  console.log("Received UserId:", req.session.user.id);
+  let id = req.session.user.id;
 
-    try {
-      // Fetch the projects for the authenticated user
-      const projects = await databaseController.getProjectsByUserId(id);
+  try {
+    // Fetch the projects for the authenticated user
+    const projects = await databaseController.getProjectsByUserId(id);
 
-      // Render the projects page with the fetched projects
-      res.render("projects", { projects, userId: id });
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      res.status(500).json({ message: "Error fetching projects in index" });
-    }
+    // Render the projects page with the fetched projects
+    res.render("projects", { projects, userId: id });
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    res.status(500).json({ message: "Error fetching projects in index" });
   }
-);
+});
 
 router.get("/name/:myName", homeController.respondWithName);
 

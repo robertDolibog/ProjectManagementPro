@@ -16,13 +16,18 @@ exports.signup = async (req, res) => {
       .json({ message: "User created successfully", user: newUser });
   } catch (error) {
     console.error("Error creating user:", error);
-    res.status(500).json({ message: "Error creating user" });
+    req.session.error = error.message;
+    res.redirect("/signin");
   }
 };
 exports.signInPage = (req, res) => {
-  // Logic for handling the sign-in page route
-  res.render("signIn");
+  // Get the error message from the query parameters
+  const error = req.session.error;
+
+  // Pass the error message to the template
+  res.render("signIn", { error });
 };
+
 exports.signupPage = (req, res) => {
   // Logic for handling the signup page route
 
@@ -58,7 +63,7 @@ exports.signIn = async (req, res) => {
         } else {
           // Redirect the user to their unique projects route
           console.log("Redirecting to user's projects page with ID:", user.id);
-          res.redirect(`/projects/${user.id}`);
+          res.redirect(`/projects`);
         }
       });
     } else {
