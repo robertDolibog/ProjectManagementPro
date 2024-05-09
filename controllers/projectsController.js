@@ -15,3 +15,13 @@ exports.getProjectsByUserId = async (req, res) => {
     res.status(500).json({ message: "Error fetching projects" });
   }
 };
+
+exports.getProjectUsers = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const users = await databaseController.getUsersByProjectId(projectId);
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}

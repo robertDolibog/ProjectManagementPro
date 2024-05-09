@@ -8,17 +8,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-  model Project {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    title     String   @db.VarChar(255)
-    content   String?
-    published Boolean  @default(false)
-    author    User     @relation("ProjectToUser", fields: [userId], references: [id])
-    userId    Int      @map("userId")
-    tasks     Task[]   @relation("ProjectToTask")
-  }
+model Project {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @db.VarChar(255)
+  content   String?
+  published Boolean  @default(false)
+  users     UserProject[] // New relation field
+  tasks     Task[]   @relation("ProjectToTask")
+}
 
   model Task {
     id        Int      @id @default(autoincrement())
@@ -34,10 +33,19 @@ datasource db {
   }
 
 model User {
-    id       Int       @id @default(autoincrement())
-    email    String    @unique
-    name     String?
-    password String?
-    projects Project[] @relation("ProjectToUser")
-    tasks    Task[]    @relation("TaskToUser")
+  id       Int       @id @default(autoincrement())
+  email    String    @unique
+  name     String?
+  password String?
+  projects UserProject[] // New relation field
+  tasks    Task[]    @relation("TaskToUser")
+}
+
+model UserProject {
+  userId    Int
+  projectId Int
+  user      User     @relation(fields: [userId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@id([userId, projectId])
 }

@@ -93,3 +93,23 @@ exports.authenticate = (req, res, next) => {
     res.redirect("/signIn");
   }
 };
+
+exports.addUserToProject = async (req, res) => {
+  try {
+    const { userId, projectId } = req.body;
+    const result = await databaseController.addUserToProject(userId, projectId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+exports.removeUserFromProject = async (req, res) => {
+  try {
+    const { userId, projectId } = req.body;
+    const result = await databaseController.removeUserFromProject(userId, projectId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}

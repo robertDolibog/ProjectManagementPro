@@ -53,11 +53,17 @@ async function getProjectsByUserId(userId) {
     return [];
   }
 
-  const projects = await prisma.project.findMany({
+  const userProjects = await prisma.userProject.findMany({
     where: {
       userId: parsedUserId,
     },
+    include: {
+      project: true,
+    },
   });
+
+  // Extract the projects from the userProjects array
+  const projects = userProjects.map(userProject => userProject.project);
 
   return projects || [];
 }
@@ -77,7 +83,11 @@ async function createProject(title, content, session) {
     data: {
       title: title,
       content: content,
-      userId: userId, // Connect the User to the Project through the userId field
+      users: {
+        create: {
+          userId: userId,
+        },
+      },
     },
   });
   return project;
@@ -98,12 +108,28 @@ async function updateProject(id, title, content) {
 
 async function deleteProject(id) {
   id = Number(id);
-  const project = await prisma.project.delete({
-    where: { id },
-  });
-  return project;
-}
 
+  try {
+    // Delete the associated users from the UserProject table
+    await prisma.userProject.deleteMany({
+      where: {
+        projectId: id,
+      },
+    });
+
+    // Delete the project
+    const project = await prisma.project.delete({
+      where: {
+        id: id,
+      },
+    });
+
+    return project;
+  } catch (error) {
+    console.error('Error in deleteProject:', error);
+    throw new Error("Failed to delete project.");
+  }
+}
 // Create a new task
 exports.createTask = async (req, res) => {
   const { title, content, projectId } = req.body;
@@ -175,6 +201,61 @@ exports.deleteTask = async (req, res) => {
     res.status(500).json({ error: `Failed to delete task: ${error.message}` });
   }
 };
+async function addUserToProject(userId, projectId) {
+  try {
+    const newUserProject = await prisma.userProject.create({
+      data: {
+        userId: Number(userId),
+        projectId: Number(projectId),
+      },
+    });
+
+    return newUserProject;
+  } catch (error) {
+    console.error('Error in addUserToProject:', error);
+    throw new Error("Failed to add user to project.");
+  }
+}
+
+async function removeUserFromProject(userId, projectId) {
+  try {
+    const deleteUserProject = await prisma.userProject.delete({
+      where: {
+        userId_projectId: {
+          userId: Number(userId),
+          projectId: Number(projectId),
+        },
+      },
+    });
+
+    return deleteUserProject;
+  } catch (error) {
+    console.error('Error in removeUserFromProject:', error);
+    throw new Error("Failed to remove user from project.");
+  }
+}
+
+async function getUsersByProjectId(projectId) {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        projects: {
+          some: {
+            projectId: Number(projectId),
+          },
+        },
+      },
+    });
+
+    return users;
+  } catch (error) {
+    console.error('Error in getUsersByProjectId:', error);
+    throw new Error("Failed to get users by project.");
+  }
+}
+
+
+
 
 module.exports = {
   createUser,
@@ -183,4 +264,7 @@ module.exports = {
   createProject,
   updateProject,
   deleteProject,
+  addUserToProject,
+  removeUserFromProject,
+  getUsersByProjectId,
 };
