@@ -9,6 +9,8 @@ const userController = require("../controllers/userController");
 
 const databaseController = require("../database/databaseController");
 
+const taskController = require("../controllers/tasksController");
+
 router.use(
   express.urlencoded({
     extended: false,
@@ -68,6 +70,8 @@ router.get("/projects", userController.authenticate, async (req, res) => {
     // Fetch the projects for the authenticated user
     const projects = await databaseController.getProjectsByUserId(id);
 
+    console.log("retrived projects:", projects);
+
     // Render the projects page with the fetched projects
     res.render("projects", { projects, userId: id });
   } catch (error) {
@@ -75,6 +79,8 @@ router.get("/projects", userController.authenticate, async (req, res) => {
     res.status(500).json({ message: "Error fetching projects in index" });
   }
 });
+
+router.post("/projects/:projectId/tasks", taskController.createTask);
 
 router.get("/name/:myName", homeController.respondWithName);
 

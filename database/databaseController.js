@@ -57,6 +57,7 @@ async function getProjectsByUserId(userId) {
     where: {
       userId: parsedUserId,
     },
+    include: tasks,
   });
 
   return projects || [];
@@ -132,6 +133,23 @@ exports.getTasks = async (req, res) => {
     res.status(200).json(tasks);
   } catch (error) {
     res.status(500).json({ error: `Failed to fetch tasks: ${error.message}` });
+  }
+};
+
+// Get tasks by project ID
+exports.getTasksByProjectId = async (projectId) => {
+  try {
+    const tasks = await prisma.task.findMany({
+      where: {
+        projectId: Number(projectId),
+      },
+    });
+    return tasks;
+  } catch (error) {
+    console.error(
+      `Failed to fetch tasks for project ${projectId}: ${error.message}`
+    );
+    return null;
   }
 };
 
