@@ -1,74 +1,167 @@
 <!DOCTYPE html>
-<head>
-  <title>Projects</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-  <h1>Your Projects</h1>
 
-  <h2>Create Project</h2>
-  <form id="create-project-form">
-    <label for="title">Name:</label><br>
-    <input type="text" id="title" name="title"><br>
-    <label for="description">Description:</label><br>
-    <textarea id="description" name="description"></textarea><br>
-    <input type="submit" value="Create">
-  </form>
+<html>
+  <head>
+    <title>Projects</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <h1>Your Projects</h1>
 
-  <% if (projects.length > 0) { %>
-  <ul>
-    <% projects.forEach(function(project) { %>
-    <li>
-      <h2><%= project.title %></h2>
-      <p><%= project.description %></p>
-      <button class="update-project-button" data-id="<%= project.id %>">Update</button>
-      <button class="delete-project-button" data-id="<%= project.id %>">Delete</button>
+    <h2>Create Project</h2>
+    <form id="create-project-form">
+      <label for="title">Name:</label><br />
+      <input type="text" id="title" name="title" /><br />
+      <label for="description">Description:</label><br />
+      <textarea id="description" name="description"></textarea><br />
+      <input type="submit" value="Create" />
+    </form>
+
+    <% if (projects.length > 0) { %>
+      <ul>
+        <%console.log(projects); projects.forEach(function(project) { %>
+        <li>
+          <h2><%= project.title %></h2>
+          <p><%= project.description %></p>
+
+        <!-- Button to toggle the form -->
+        <button
+          class="btn btn-primary"
+          type="button"
+          data-toggle="collapse"
+          data-target="#createTaskForm"
+          aria-expanded="false"
+          aria-controls="createTaskForm"
+        >
+          Create Task
+        </button>
+
+        <!-- Form for creating tasks -->
+        <div class="collapse" id="createTaskForm">
+          <div class="card card-body">
+            <h2>Create Task</h2>
+            <form id="create-task-form">
+              <label for="task-title">Task Name:</label><br />
+              <input type="text" id="task-title" name="task-title" /><br />
+              <label for="task-description">Task Description:</label><br />
+              <textarea id="task-description" name="task-description"></textarea
+              ><br />
+              <input
+                type="hidden"
+                id="project-id"
+                name="project-id"
+                value="<%= project.id %>"
+              />
+              <input type="submit" value="Create Task" />
+            </form>
+          </div>
+        </div>
+
+        <button class="update-project-button" data-id="<%= project.id %>">
+          Update
+        </button>
+        <button class="delete-project-button" data-id="<%= project.id %>">
+          Delete
+        </button>
+        <br>
+      <section>
+        <h2>Project Users</h2>
+        <ul id="project-users">
+          <% users.forEach(function(user) { %>
+            <li><%= user.id %> - <%= user.name %></li>
+          <% }); %>
+        </ul>
+      </section>
+      <br>
+      <form class="user-manage-form">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" name="userId" required>
+        <button data-projectId="<%= project.id %>" type="button" class="add-user-button">Add User</button>
+        <button data-projectId="<%= project.id %>" type="button" class="remove-user-button">Remove User</button>
+      </form>
     </li>
-    <% }); %>
-  </ul>
-  <% } else { %>
-  <p>No projects found.</p>
-  <% } %>
+      <% }); %>
+    </ul>
+    <% } else { %>
+    <p>No projects found.</p>
+    <% } %>
 
   <script>
-    $('#create-project-form').submit(function(e) {
-      e.preventDefault();
-      const title = $('#title').val();
-      const content = $('#description').val();
+    function performAjaxRequest(url, method, data, successCallback, errorCallback) {
+        $.ajax({
+            url: url,
+            type: method,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: successCallback,
+            error: errorCallback || function(error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    }
 
-      $.post('/projects', { title, content }, function(data) {
-        // Refresh the page to see the new project
-        location.reload();
-      });
+    $('#create-project-form').submit(function(e) {
+        e.preventDefault();
+        performAjaxRequest('/projects', 'POST', {
+            title: $('#title').val(),
+            description: $('#description').val()
+        }, function() {
+            location.reload();
+        });
     });
 
     $('.update-project-button').click(function() {
-      const id = $(this).data('id');
-      const title = prompt('Enter new title');
-      const content = prompt('Enter new content');
-      $.ajax({
-      url: '/projects/' + id,
-      type: 'PUT',
-      data: { title, content },
-      success: function(data) {
-      // Refresh the page to see the updated project
-       location.reload();
-      }
-     });
+        const id = $(this).data('id');
+        performAjaxRequest('/projects/' + id, 'PUT', {
+            title: prompt('Enter new title'),
+            description: prompt('Enter new content')
+        }, function() {
+            location.reload();
+        });
     });
-      
 
     $('.delete-project-button').click(function() {
-      const id = $(this).data('id');
-      $.ajax({
-        url: '/projects/' + id,
-        type: 'DELETE',
-        success: function(data) {
-          // Refresh the page to see the project removed
-          location.reload();
-        }
-      });
+        const id = $(this).data('id');
+        performAjaxRequest('/projects/' + id, 'DELETE', {}, function() {
+            location.reload();
+        });
     });
-  </script>
+
+    $("#create-task-form").submit(function (e) {
+        e.preventDefault();
+        const title = $("#task-title").val();
+        const description = $("#task-description").val();
+        const projectId = $("#project-id").val();
+        $.post("/tasks", { title, description, projectId }, function (data) {
+          // Refresh the page to see the new task
+          location.reload();
+        });
+      });
+
+    $('button.add-user-button, button.remove-user-button').click(function() {
+        const projectId = $(this).data('projectid'); // Ensure this matches exactly with the data attribute name
+        const userId = $(this).closest('form').find('#userId').val();
+        const method = $(this).hasClass('add-user-button') ? 'POST' : 'DELETE';
+        const url = '/projects/' + projectId + '/users';
+
+        if (!projectId) {
+            alert('Project ID is missing!');
+            return; // Prevent AJAX call if projectId is undefined
+        }
+
+        performAjaxRequest(url, method, {
+            userId: userId
+        }, function() {
+            location.reload();
+        });
+    });
+</script>
+
 </body>
 </html>

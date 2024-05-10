@@ -9,6 +9,13 @@ const userController = require("../controllers/userController");
 
 const databaseController = require("../database/databaseController");
 
+const projectsController = require("../controllers/projectsController");
+
+const taskController = require("../controllers/tasksController");
+
+
+
+
 router.use(
   express.urlencoded({
     extended: false,
@@ -68,13 +75,45 @@ router.get("/projects", userController.authenticate, async (req, res) => {
     // Fetch the projects for the authenticated user
     const projects = await databaseController.getProjectsByUserId(id);
 
-    // Render the projects page with the fetched projects
-    res.render("projects", { projects, userId: id });
+    console.log("retrived projects:", projects);
+
+    // Fetch the users for each project
+    const usersPromises = projects.map(project => databaseController.getUsersByProjectId(project.id));
+    let users = await Promise.all(usersPromises);
+
+    // Flatten the users array
+    users = users.flat();
+
+    // Render the projects page with the fetched projects and users
+    res.render("projects", { projects, users, userId: id });
   } catch (error) {
     console.error("Error fetching projects:", error);
     res.status(500).json({ message: "Error fetching projects in index" });
   }
 });
+
+
+// Add a user to a project
+router.post("/projects/:projectId/users", async (req, res) => {
+  req.body.userId = req.body.userId;
+  req.body.projectId = req.params.projectId;
+  userController.addUserToProject(req, res);
+});
+
+// Remove a user from a project
+router.delete("/projects/:projectId/users", async (req, res) => {
+  req.body.userId = req.body.userId;
+  req.body.projectId = req.params.projectId;
+  userController.removeUserFromProject(req, res);
+});
+
+// Get all users of a project
+router.get("/projects/:projectId/users", async (req, res) => {
+  req.params.projectId = req.params.projectId;
+  projectsController.getProjectUsers(req, res);
+});
+
+router.post("/projects/:projectId/tasks", taskController.createTask);
 
 router.get("/name/:myName", homeController.respondWithName);
 
