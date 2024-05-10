@@ -13,6 +13,9 @@ const projectsController = require("../controllers/projectsController");
 
 const taskController = require("../controllers/tasksController");
 
+
+
+
 router.use(
   express.urlencoded({
     extended: false,
@@ -109,9 +112,6 @@ router.get("/projects/:projectId/users", async (req, res) => {
   req.params.projectId = req.params.projectId;
   projectsController.getProjectUsers(req, res);
 });
-
-
-
 
 router.post("/projects/:projectId/tasks", taskController.createTask);
 
