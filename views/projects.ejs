@@ -1,31 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Projects</title>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-  <h1>Your Projects</h1>
 
-  <h2>Create Project</h2>
-  <form id="create-project-form">
-    <label for="title">Name:</label><br>
-    <input type="text" id="title" name="title"><br>
-    <label for="description">Description:</label><br>
-    <textarea id="description" name="description"></textarea><br>
-    <input type="submit" value="Create">
-  </form>
+<html>
+  <head>
+    <title>Projects</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body>
+    <h1>Your Projects</h1>
 
-  <% if (projects.length > 0) { %>
-  <ul>
-    <% projects.forEach(function(project) { %>
-    <li>
-      <h2 data-id="<%= project.id %>"><%= project.title %></h2>
-      <p data-id="<%= project.id %>"><%= project.description %></p>
-      <button class="update-project-button" data-id="<%= project.id %>">Update</button>
-      <button class="delete-project-button" data-id="<%= project.id %>">Delete</button>
-      <br>
+    <h2>Create Project</h2>
+    <form id="create-project-form">
+      <label for="title">Name:</label><br />
+      <input type="text" id="title" name="title" /><br />
+      <label for="description">Description:</label><br />
+      <textarea id="description" name="description"></textarea><br />
+      <input type="submit" value="Create" />
+    </form>
+
+    <% if (projects.length > 0) { %>
+      <ul>
+        <%console.log(projects); projects.forEach(function(project) { %>
+        <li>
+          <h2><%= project.title %></h2>
+          <p><%= project.description %></p>
+
+        <!-- Button to toggle the form -->
+        <button
+          class="btn btn-primary"
+          type="button"
+          data-toggle="collapse"
+          data-target="#createTaskForm"
+          aria-expanded="false"
+          aria-controls="createTaskForm"
+        >
+          Create Task
+        </button>
+
+        <!-- Form for creating tasks -->
+        <div class="collapse" id="createTaskForm">
+          <div class="card card-body">
+            <h2>Create Task</h2>
+            <form id="create-task-form">
+              <label for="task-title">Task Name:</label><br />
+              <input type="text" id="task-title" name="task-title" /><br />
+              <label for="task-description">Task Description:</label><br />
+              <textarea id="task-description" name="task-description"></textarea
+              ><br />
+              <input
+                type="hidden"
+                id="project-id"
+                name="project-id"
+                value="<%= project.id %>"
+              />
+              <input type="submit" value="Create Task" />
+            </form>
+          </div>
+        </div>
+
+        <button class="update-project-button" data-id="<%= project.id %>">
+          Update
+        </button>
+        <button class="delete-project-button" data-id="<%= project.id %>">
+          Delete
+        </button>
+        <br>
       <section>
         <h2>Project Users</h2>
         <ul id="project-users">
@@ -42,11 +85,11 @@
         <button data-projectId="<%= project.id %>" type="button" class="remove-user-button">Remove User</button>
       </form>
     </li>
-    <% }); %>
-  </ul>
-  <% } else { %>
-  <p>No projects found.</p>
-  <% } %>
+      <% }); %>
+    </ul>
+    <% } else { %>
+    <p>No projects found.</p>
+    <% } %>
 
   <script>
     function performAjaxRequest(url, method, data, successCallback, errorCallback) {
@@ -89,6 +132,17 @@
             location.reload();
         });
     });
+
+    $("#create-task-form").submit(function (e) {
+        e.preventDefault();
+        const title = $("#task-title").val();
+        const description = $("#task-description").val();
+        const projectId = $("#project-id").val();
+        $.post("/tasks", { title, description, projectId }, function (data) {
+          // Refresh the page to see the new task
+          location.reload();
+        });
+      });
 
     $('button.add-user-button, button.remove-user-button').click(function() {
         const projectId = $(this).data('projectid'); // Ensure this matches exactly with the data attribute name

@@ -11,6 +11,8 @@ const databaseController = require("../database/databaseController");
 
 const projectsController = require("../controllers/projectsController");
 
+const taskController = require("../controllers/tasksController");
+
 router.use(
   express.urlencoded({
     extended: false,
@@ -70,6 +72,8 @@ router.get("/projects", userController.authenticate, async (req, res) => {
     // Fetch the projects for the authenticated user
     const projects = await databaseController.getProjectsByUserId(id);
 
+    console.log("retrived projects:", projects);
+
     // Fetch the users for each project
     const usersPromises = projects.map(project => databaseController.getUsersByProjectId(project.id));
     let users = await Promise.all(usersPromises);
@@ -108,6 +112,8 @@ router.get("/projects/:projectId/users", async (req, res) => {
 
 
 
+
+router.post("/projects/:projectId/tasks", taskController.createTask);
 
 router.get("/name/:myName", homeController.respondWithName);
 

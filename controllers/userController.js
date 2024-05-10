@@ -20,6 +20,7 @@ exports.signup = async (req, res) => {
     res.redirect("/signin");
   }
 };
+
 exports.signInPage = (req, res) => {
   // Get the error message from the query parameters
   const error = req.session.error;
@@ -56,16 +57,15 @@ exports.signIn = async (req, res) => {
       console.log("Session data:", req.session);
 
       // Save the session before redirecting
-      await req.session.save((err) => {
-        if (err) {
-          console.error("Error saving session:", err);
-          res.render("login", { error: "Error logging in user" });
-        } else {
-          // Redirect the user to their unique projects route
-          console.log("Redirecting to user's projects page with ID:", user.id);
-          res.redirect(`/projects`);
-        }
-      });
+      try {
+        await req.session.save();
+        // Redirect the user to their unique projects route
+        console.log("Redirecting to user's projects page with ID:", user.id);
+        res.redirect(`/projects`);
+      } catch (err) {
+        console.error("Error saving session:", err);
+        res.render("login", { error: "Error logging in user" });
+      }
     } else {
       res.render("signIn", { error: "Invalid email or password" });
     }

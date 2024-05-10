@@ -161,6 +161,23 @@ exports.getTasks = async (req, res) => {
   }
 };
 
+// Get tasks by project ID
+exports.getTasksByProjectId = async (projectId) => {
+  try {
+    const tasks = await prisma.task.findMany({
+      where: {
+        projectId: Number(projectId),
+      },
+    });
+    return tasks;
+  } catch (error) {
+    console.error(
+      `Failed to fetch tasks for project ${projectId}: ${error.message}`
+    );
+    return null;
+  }
+};
+
 // Get a single task by ID
 exports.getTask = async (req, res) => {
   const { id } = req.params;

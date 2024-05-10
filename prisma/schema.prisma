@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
 }
 
@@ -17,20 +17,31 @@ model Project {
   published Boolean  @default(false)
   users     UserProject[] // New relation field
   tasks     Task[]   @relation("ProjectToTask")
+  Comment Comment[]
 }
 
-  model Task {
-    id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    title     String   @db.VarChar(255)
-    content   String?
-    published Boolean  @default(false)
-    author    User     @relation("TaskToUser", fields: [userId], references: [id])
-    userId    Int      @map("userId")
-    projectId Int      @map("projectId")
-    project   Project  @relation("ProjectToTask", fields: [projectId], references: [id])
-  }
+model Task {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String   @db.VarChar(255)
+  content   String?
+  published Boolean  @default(false)
+  author    User     @relation("TaskToUser", fields: [userId], references: [id])
+  userId    Int      @map("userId")
+  projectId Int      @map("projectId")
+  project   Project  @relation("ProjectToTask", fields: [projectId], references: [id])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  content   String
+  author    User     @relation(fields: [userId], references: [id])
+  userId    Int
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+}
 
 model User {
   id       Int       @id @default(autoincrement())
@@ -39,7 +50,9 @@ model User {
   password String?
   projects UserProject[] // New relation field
   tasks    Task[]    @relation("TaskToUser")
+  Comment Comment[]
 }
+
 
 model UserProject {
   userId    Int
