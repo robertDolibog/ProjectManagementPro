@@ -13,9 +13,6 @@ const projectsController = require("../controllers/projectsController");
 
 const taskController = require("../controllers/tasksController");
 
-
-
-
 router.use(
   express.urlencoded({
     extended: false,
@@ -39,7 +36,9 @@ router.post("/signin", userController.signIn);
 
 router.get("/logout", userController.logout);
 
-router.get("/", mainController.mainPage);
+router.get("/", (req, res) => {
+  res.send("Hello from the Backend!");
+});
 
 router.get("/about", (req, res) => {
   res.send("Hello from the about route!");
@@ -78,7 +77,9 @@ router.get("/projects", userController.authenticate, async (req, res) => {
     console.log("retrived projects:", projects);
 
     // Fetch the users for each project
-    const usersPromises = projects.map(project => databaseController.getUsersByProjectId(project.id));
+    const usersPromises = projects.map((project) =>
+      databaseController.getUsersByProjectId(project.id)
+    );
     let users = await Promise.all(usersPromises);
 
     // Flatten the users array
@@ -91,7 +92,6 @@ router.get("/projects", userController.authenticate, async (req, res) => {
     res.status(500).json({ message: "Error fetching projects in index" });
   }
 });
-
 
 // Add a user to a project
 router.post("/projects/:projectId/users", async (req, res) => {
