@@ -1,18 +1,18 @@
 version: "3.8"
 services:
   app:
-    build: .
+    build: ./backend
     command: sh -c "npx prisma migrate deploy && npx nodemon main.js"
     ports:
-      - "3000:3000"
+      - "4000:4000"
     depends_on:
       - db
       - redis_sessions
       - redis_pubsub
     env_file:
-      - .env
+      - ./backend/.env
     volumes:
-      - .:/app
+      - ./backend:/app
 
   db:
     image: postgres:16
