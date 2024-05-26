@@ -63,7 +63,7 @@ async function getProjectsByUserId(userId) {
   });
 
   // Extract the projects from the userProjects array
-  const projects = userProjects.map(userProject => userProject.project);
+  const projects = userProjects.map((userProject) => userProject.project);
 
   return projects || [];
 }
@@ -76,6 +76,8 @@ async function createProject(title, content, session) {
       content
     );
   }
+
+  console.log(session);
 
   const userId = session.user.id;
 
@@ -126,7 +128,7 @@ async function deleteProject(id) {
 
     return project;
   } catch (error) {
-    console.error('Error in deleteProject:', error);
+    console.error("Error in deleteProject:", error);
     throw new Error("Failed to delete project.");
   }
 }
@@ -229,7 +231,7 @@ async function addUserToProject(userId, projectId) {
 
     return newUserProject;
   } catch (error) {
-    console.error('Error in addUserToProject:', error);
+    console.error("Error in addUserToProject:", error);
     throw new Error("Failed to add user to project.");
   }
 }
@@ -247,7 +249,7 @@ async function removeUserFromProject(userId, projectId) {
 
     return deleteUserProject;
   } catch (error) {
-    console.error('Error in removeUserFromProject:', error);
+    console.error("Error in removeUserFromProject:", error);
     throw new Error("Failed to remove user from project.");
   }
 }
@@ -266,13 +268,10 @@ async function getUsersByProjectId(projectId) {
 
     return users;
   } catch (error) {
-    console.error('Error in getUsersByProjectId:', error);
+    console.error("Error in getUsersByProjectId:", error);
     throw new Error("Failed to get users by project.");
   }
 }
-
-
-
 
 module.exports = {
   createUser,

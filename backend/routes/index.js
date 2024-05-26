@@ -1,13 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../database/databaseController"); // Import the database connection
-const mainController = require("../controllers/mainController"); // Import the main controller
-
-const homeController = require("../controllers/homeController");
 
 const userController = require("../controllers/userController");
-
-const databaseController = require("../database/databaseController");
 
 const projectsController = require("../controllers/projectsController");
 
@@ -29,9 +23,7 @@ router.use((req, res, next) => {
 // Define routes
 
 router.post("/signup", userController.signup);
-router.get("/signup", userController.signupPage);
 
-router.get("/signin", userController.signInPage);
 router.post("/signin", userController.signIn);
 
 router.get("/logout", userController.logout);
@@ -40,53 +32,49 @@ router.get("/", (req, res) => {
   res.send("Hello from the Backend!");
 });
 
-router.get("/about", (req, res) => {
-  res.send("Hello from the about route!");
-});
-
 router.post("/projects", async (req, res) => {
   const { title, content } = req.body;
-
-  console.log(req.session);
-  const project = await db.createProject(title, content, req.session);
+  const session = req.session;
+  console.log(session);
+  const project = await projectsController.createProject(
+    title,
+    content,
+    session
+  );
   res.json(project);
 });
 
+// When a project is updated, emit an event with the updated project data
 router.put("/projects/:id", async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
-  const project = await db.updateProject(id, title, content);
-  console.log("updateProject", project);
+  const project = await projectsController.updateProject(id, title, content);
+
+  // Emit the 'projectNameUpdated' event
+  io.emit("projectNameUpdated", project);
+
+  res.json(project);
+});
+
+router.patch("/projects/:id", async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+  const project = await projectsController.updateProject(id, title, content);
   res.json(project);
 });
 
 router.delete("/projects/:id", async (req, res) => {
   const { id } = req.params;
-  const project = await db.deleteProject(id);
+  const project = await projectsController.deleteProject(id);
   res.json(project);
 });
 
 router.get("/projects", userController.authenticate, async (req, res) => {
-  console.log("Received UserId:", req.session.user.id);
   let id = req.session.user.id;
 
   try {
-    // Fetch the projects for the authenticated user
-    const projects = await databaseController.getProjectsByUserId(id);
-
-    console.log("retrived projects:", projects);
-
-    // Fetch the users for each project
-    const usersPromises = projects.map((project) =>
-      databaseController.getUsersByProjectId(project.id)
-    );
-    let users = await Promise.all(usersPromises);
-
-    // Flatten the users array
-    users = users.flat();
-
-    // Render the projects page with the fetched projects and users
-    res.render("projects", { projects, users, userId: id });
+    const projects = await projectsController.getProjectsByUserId(id);
+    res.json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
     res.status(500).json({ message: "Error fetching projects in index" });
@@ -114,10 +102,6 @@ router.get("/projects/:projectId/users", async (req, res) => {
 });
 
 router.post("/projects/:projectId/tasks", taskController.createTask);
-
-router.get("/name/:myName", homeController.respondWithName);
-
-router.get("/items/:vegetable", homeController.sendReqParam);
 
 router.post("/", (req, res) => {
   console.log(req.body);

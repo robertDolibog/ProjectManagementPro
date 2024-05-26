@@ -20,21 +20,6 @@ exports.signup = async (req, res) => {
     res.redirect("/signin");
   }
 };
-
-exports.signInPage = (req, res) => {
-  // Get the error message from the query parameters
-  const error = req.session.error;
-
-  // Pass the error message to the template
-  res.render("signIn", { error });
-};
-
-exports.signupPage = (req, res) => {
-  // Logic for handling the signup page route
-
-  res.render("signUp");
-};
-
 exports.signIn = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -56,25 +41,23 @@ exports.signIn = async (req, res) => {
 
       console.log("Session data:", req.session);
 
-      // Save the session before redirecting
+      // Save the session before sending the response
       try {
         await req.session.save();
-        // Redirect the user to their unique projects route
         console.log("Redirecting to user's projects page with ID:", user.id);
-        res.redirect(`/projects`);
+        res.json({ message: "Sign-in successful", redirectUrl: `/projects` });
       } catch (err) {
         console.error("Error saving session:", err);
-        res.render("login", { error: "Error logging in user" });
+        res.status(500).json({ message: "Error logging in user" });
       }
     } else {
-      res.render("signIn", { error: "Invalid email or password" });
+      res.status(401).json({ message: "Invalid email or password" });
     }
   } catch (error) {
     console.error("Error logging in user:", error);
-    res.render("login", { error: "Error logging in user" });
+    res.status(500).json({ message: "Error logging in user" });
   }
 };
-
 exports.logout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -102,14 +85,17 @@ exports.addUserToProject = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+};
 
 exports.removeUserFromProject = async (req, res) => {
   try {
     const { userId, projectId } = req.body;
-    const result = await databaseController.removeUserFromProject(userId, projectId);
+    const result = await databaseController.removeUserFromProject(
+      userId,
+      projectId
+    );
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+};

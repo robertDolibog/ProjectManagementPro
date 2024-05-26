@@ -1,6 +1,7 @@
 const port = 4000,
   express = require("express"),
   app = express(),
+  cors = require("cors"),
   path = require("path"),
   indexRouter = require("./routes/index"),
   layouts = require("express-ejs-layouts"),
@@ -48,6 +49,12 @@ app.use(
 );
 
 app.set("view engine", "ejs");
+app.use(
+  cors({
+    origin: "http://localhost:3000", // replace with your frontend origin
+    credentials: true,
+  })
+);
 app.use(layouts);
 app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);

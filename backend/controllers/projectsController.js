@@ -1,5 +1,19 @@
 const databaseController = require("../database/databaseController");
 
+// projectsController.js
+
+exports.createProject = async (title, content, session) => {
+  return await databaseController.createProject(title, content, session);
+};
+
+exports.updateProject = async (id, title, content) => {
+  return await databaseController.updateProject(id, title, content);
+};
+
+exports.deleteProject = async (id) => {
+  return await databaseController.deleteProject(id);
+};
+
 exports.getProjectsByUserId = async (req, res) => {
   let userId = req.params.userId;
   console.log("UserId:", userId);
@@ -24,4 +38,4 @@ exports.getProjectUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+};
