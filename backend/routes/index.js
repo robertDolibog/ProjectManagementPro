@@ -26,6 +26,9 @@ router.post("/signup", userController.signup);
 
 router.post("/signin", userController.signIn);
 
+// New getSession route
+router.get("/session", userController.getSession);
+
 router.get("/logout", userController.logout);
 
 router.get("/", (req, res) => {
@@ -69,9 +72,8 @@ router.delete("/projects/:id", async (req, res) => {
   res.json(project);
 });
 
-router.get("/projects", userController.authenticate, async (req, res) => {
-  let id = req.session.user.id;
-
+router.get("/projects", async (req, res) => {
+  const id = req.session.user.id;
   try {
     const projects = await projectsController.getProjectsByUserId(id);
     res.json(projects);

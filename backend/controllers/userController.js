@@ -11,13 +11,29 @@ exports.signup = async (req, res) => {
       password
     );
 
-    res
-      .status(201)
-      .json({ message: "User created successfully", user: newUser });
+    // If the user is created successfully, store their data in the session
+    req.session.user = {
+      id: newUser.id,
+      email: newUser.email,
+      // any other user data you want to store in the session
+    };
+
+    console.log("Session data:", req.session);
+
+    // Save the session before sending the response
+    try {
+      await req.session.save();
+
+      res
+        .status(201)
+        .json({ message: "User created successfully", redirect: "/dashboard" });
+    } catch (err) {
+      console.error("Error saving session:", err);
+      res.status(500).json({ message: "Error creating user" });
+    }
   } catch (error) {
     console.error("Error creating user:", error);
     req.session.error = error.message;
-    res.redirect("/signin");
   }
 };
 exports.signIn = async (req, res) => {
@@ -42,14 +58,14 @@ exports.signIn = async (req, res) => {
       console.log("Session data:", req.session);
 
       // Save the session before sending the response
-      try {
-        await req.session.save();
-        console.log("Redirecting to user's projects page with ID:", user.id);
-        res.json({ message: "Sign-in successful", redirectUrl: `/projects` });
-      } catch (err) {
-        console.error("Error saving session:", err);
-        res.status(500).json({ message: "Error logging in user" });
-      }
+      req.session.save((err) => {
+        if (err) {
+          console.error("Error saving session:", err);
+          res.status(500).json({ message: "Error logging in user" });
+        } else {
+          res.json({ message: "Sign-in successful" });
+        }
+      });
     } else {
       res.status(401).json({ message: "Invalid email or password" });
     }
@@ -64,16 +80,17 @@ exports.logout = (req, res) => {
       console.error("Error logging out user:", err);
       res.status(500).json({ message: "Error logging out user" });
     } else {
-      res.redirect("/signIn");
+      res.status(200).json({ message: "User logged out successfully" });
     }
   });
 };
 
-exports.authenticate = (req, res, next) => {
+exports.getSession = (req, res) => {
   if (req.session.user) {
-    next();
+    console.log(req.session.user);
+    res.status(200).json({ session: req.session });
   } else {
-    res.redirect("/signIn");
+    res.status(401).json({ message: "No session found" });
   }
 };
 

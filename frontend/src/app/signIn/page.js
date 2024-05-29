@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import InputField from "../_components/InputField";
+import InputField from "@/components/InputField";
 
 export default function LoginForm() {
   const router = useRouter(); // Use Next.js's router
@@ -12,6 +12,7 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -23,28 +24,34 @@ export default function LoginForm() {
       ? { email, password }
       : { name: username, email, password };
 
-    const response = await fetch(url, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      // Sign-in or sign-up was successful
-      // Redirect to the user's projects page
-      router.push("/projects");
-    } else {
-      // Sign-in or sign-up failed
-      // Show an error message
-      console.log("Error: Operation not successful!", data.message);
+      console.log("data response in frontend after signin", data);
+
+      if (response.ok) {
+        // Sign-in or sign-up was successful
+        // Redirect to the user's projects page
+        router.push("/");
+      } else {
+        // Sign-in or sign-up failed
+        // Show an error message
+        console.log("Error: Operation not successful!", data);
+        setError(data.message);
+      }
+    } catch (error) {
+      console.error("Error making fetch request:", error);
     }
   };
-
   return (
     <main className=" h-screen flex flex-col justify-center items-center bg-black">
       <form
@@ -96,6 +103,7 @@ export default function LoginForm() {
             className="mt-4 text-blue-500"
             onClick={() => setIsLogin(!isLogin)}
           >
+            {error && <p className="text-red-500">{error}</p>}
             {isLogin
               ? "Don't have an account? Sign up"
               : "Already have an account? Sign in"}

@@ -14,19 +14,16 @@ exports.deleteProject = async (id) => {
   return await databaseController.deleteProject(id);
 };
 
-exports.getProjectsByUserId = async (req, res) => {
-  let userId = req.params.userId;
-  console.log("UserId:", userId);
-
+exports.getProjectsByUserId = async (id) => {
   try {
     // Fetch the projects for the user from the database
-    const projects = await databaseController.getProjectsByUserId(userId);
+    const projects = await databaseController.getProjectsByUserId(id);
 
     // Send the projects as the response
-    res.json(projects);
+    return projects || [];
   } catch (error) {
     console.error("Error fetching projects:", error);
-    res.status(500).json({ message: "Error fetching projects" });
+    return [];
   }
 };
 

@@ -1,6 +1,6 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import io from "socket.io-client";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
@@ -11,8 +11,14 @@ export default function ProjectsPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch("http://localhost:4000/projects");
+        const response = await fetch("http://localhost:4000/projects", {
+          method: "GET",
+          credentials: "include",
+        });
+
         const data = await response.json();
+
+        console.log("fetched projects:", data);
 
         if (!response.ok) {
           throw new Error(data.message || "Could not fetch projects.");
@@ -26,6 +32,25 @@ export default function ProjectsPage() {
 
     fetchProjects();
   }, []);
+
+  const deleteProject = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:4000/projects/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not delete project.");
+      }
+
+      setProjects((prevProjects) =>
+        prevProjects.filter((project) => project.id !== id)
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const addProject = async () => {
     try {
@@ -102,6 +127,8 @@ export default function ProjectsPage() {
             className=" text-white bg-black"
           />
           <p>{project.content}</p>
+          <button onClick={() => deleteProject(project.id)}>Delete</button>
+          {/* Add this line */}
         </div>
       ))}
 
