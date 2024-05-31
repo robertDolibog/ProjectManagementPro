@@ -2,11 +2,11 @@ const databaseController = require("../database/databaseController");
 
 exports.signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-
+    const { name: name, email, password } = req.body;
+    //console.log(name, email, password);
     // Create a new user using the databaseController
     const newUser = await databaseController.createUser(
-      username,
+      name,
       email,
       password
     );
@@ -94,25 +94,4 @@ exports.getSession = (req, res) => {
   }
 };
 
-exports.addUserToProject = async (req, res) => {
-  try {
-    const { userId, projectId } = req.body;
-    const result = await databaseController.addUserToProject(userId, projectId);
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
-exports.removeUserFromProject = async (req, res) => {
-  try {
-    const { userId, projectId } = req.body;
-    const result = await databaseController.removeUserFromProject(
-      userId,
-      projectId
-    );
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};

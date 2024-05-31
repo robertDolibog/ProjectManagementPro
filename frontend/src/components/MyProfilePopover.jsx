@@ -24,17 +24,18 @@ export default function MyProfilePopover() {
 
       const data = await response.json();
 
-      console.log("data response in forntend logout", data);
+      console.log("data response in frontend logout", data);
 
-      //   if (response.ok) {
-      //     // Sign-out was successful
-      //     // Redirect to the sign-in page
-      //     router.push("/signin");
-      //   }
+      if (response.ok) {
+        // Sign-out was successful
+        // Reload the /signin page
+        router.push("/signin");
+      }
     } catch (error) {
       console.error("Failed to logout:", error);
     }
   };
+
 
   return (
     <Popover>

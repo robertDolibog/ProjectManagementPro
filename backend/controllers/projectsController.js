@@ -27,12 +27,36 @@ exports.getProjectsByUserId = async (id) => {
   }
 };
 
-exports.getProjectUsers = async (req, res) => {
+exports.getProjectUsers = async (projectId) => {
   try {
-    const { projectId } = req.params;
     const users = await databaseController.getUsersByProjectId(projectId);
-    res.status(200).json(users);
+    //console.log("Backend projectController: Users Flag: " + JSON.stringify(users.json));
+    return users || [];
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error fetching users:", error);
+    return [];
+  }
+};
+
+exports.addUserToProject = async (userId, projectId) => {
+  try {
+    const user = await databaseController.addUserToProject(userId, projectId);
+    return user;
+  } catch (error) {
+    console.error("Error adding user to project:", error);
+    return null;
+  }
+};
+
+exports.removeUserFromProject = async (userId, projectId) => {
+  try {
+    const user = await databaseController.removeUserFromProject(
+      userId,
+      projectId
+    );
+    return user;
+  } catch (error) {
+    console.error("Error removing user from project:", error);
+    return null;
   }
 };

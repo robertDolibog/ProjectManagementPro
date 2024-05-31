@@ -85,22 +85,32 @@ router.get("/projects", async (req, res) => {
 
 // Add a user to a project
 router.post("/projects/:projectId/users", async (req, res) => {
-  req.body.userId = req.body.userId;
-  req.body.projectId = req.params.projectId;
-  userController.addUserToProject(req, res);
+  const userId = req.body.userId;
+  const projectId = req.params.projectId;
+  const user = await projectsController.addUserToProject(userId, projectId);
+  res.json(user);
 });
 
 // Remove a user from a project
 router.delete("/projects/:projectId/users", async (req, res) => {
-  req.body.userId = req.body.userId;
-  req.body.projectId = req.params.projectId;
-  userController.removeUserFromProject(req, res);
+  const userId = req.body.userId;
+  const projectId = req.params.projectId;
+
+  const user = await projectsController.removeUserFromProject(userId, projectId);
+  res.json(user);
 });
 
 // Get all users of a project
 router.get("/projects/:projectId/users", async (req, res) => {
-  req.params.projectId = req.params.projectId;
-  projectsController.getProjectUsers(req, res);
+  const projectId = req.params.projectId;
+  try {
+    const users = await projectsController.getProjectUsers(projectId);
+    //console.log("Backend Index Users Flag: " + JSON.stringify(users.json));
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Error fetching users in index" });
+  }
 });
 
 router.post("/projects/:projectId/tasks", taskController.createTask);

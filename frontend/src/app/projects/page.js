@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { addUserToProject, getUsersInProject, removeUserFromProject } from "@/components/MyProjectUserService";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const [error, setError] = useState(null);
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -114,6 +116,15 @@ export default function ProjectsPage() {
     }
   };
 
+  const fetchUsers = async (projectId) => {
+    const users = await getUsersInProject(projectId, setError);
+    setProjects((prevProjects) =>
+      prevProjects.map((project) =>
+        project.id === projectId ? { ...project, users } : project
+      )
+    );
+  };
+
   return (
     <div className="flex w-screen h-screen justify-center items-center flex-col">
       <h1>Projects</h1>
@@ -124,11 +135,29 @@ export default function ProjectsPage() {
             type="text"
             value={project.title}
             onChange={(e) => updateProjectTitle(project.id, e.target.value)}
-            className=" text-white bg-black"
+            className="text-white bg-black"
           />
           <p>{project.content}</p>
           <button onClick={() => deleteProject(project.id)}>Delete</button>
-          {/* Add this line */}
+          <div>
+            <input
+              type="text"
+              placeholder="User ID"
+              onChange={(e) => setUserId(e.target.value)}
+              className="text-white bg-black"
+            />
+            <button onClick={() => addUserToProject(project.id, userId, setError)}>Add User</button>
+          </div>
+          <div>
+            <button onClick={() => fetchUsers(project.id)}>Show Users</button>
+            {project.users && project.users.map((user) => (
+              <div key={user.id}>
+                <span>{user.id}{user.name}</span>
+                <br />
+                <button className="font-bold" onClick={() => removeUserFromProject(project.id, user.id, setError)}>Remove</button>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
 
@@ -138,17 +167,19 @@ export default function ProjectsPage() {
           value={newProjectName}
           onChange={(e) => setNewProjectName(e.target.value)}
           placeholder="New project name"
-          className=" text-black"
+          className="text-black"
         />
         <input
           type="text"
           value={newProjectDescription}
           onChange={(e) => setNewProjectDescription(e.target.value)}
           placeholder="New project description"
-          className=" text-black"
+          className="text-black"
         />
         <button onClick={addProject}>Add Project</button>
       </div>
+
+      {error && <p className="text-red-500 mt-4">{error}</p>}
     </div>
   );
 }
