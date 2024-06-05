@@ -7,6 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function MyProfilePopover() {
@@ -36,7 +37,6 @@ export default function MyProfilePopover() {
     }
   };
 
-
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -49,11 +49,14 @@ export default function MyProfilePopover() {
       </PopoverTrigger>
       <PopoverContent className="w-80">
         <div className="grid gap-4">
-          <div className="space-y-2">
+          <div className="flex-col flex justify-center items-center gap-5">
             <h4 className="font-medium leading-none">Username</h4>
             <button onClick={handleLogout} className="text-sm text-gray-500">
               Logout
             </button>
+            <Link href="/my-account" className="text-sm text-gray-500">
+              My Account
+            </Link>
           </div>
         </div>
       </PopoverContent>

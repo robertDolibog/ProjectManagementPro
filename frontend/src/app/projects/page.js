@@ -1,7 +1,12 @@
 "use client";
 
+import {
+  addUserToProject,
+  getUsersInProject,
+  removeUserFromProject,
+} from "@/components/MyProjectUserService";
 import { useEffect, useState } from "react";
-import { addUserToProject, getUsersInProject, removeUserFromProject } from "@/components/MyProjectUserService";
+import useSocket from "../../hooks/useSocket";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
@@ -9,7 +14,9 @@ export default function ProjectsPage() {
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const [error, setError] = useState(null);
   const [userId, setUserId] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
+  // Fetch projects
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -27,6 +34,11 @@ export default function ProjectsPage() {
         }
 
         setProjects(data);
+
+        // Set the first project as the selected project by default
+        if (data.length > 0) {
+          setSelectedProjectId(data[0].id);
+        }
       } catch (err) {
         setError(err.message);
       }
@@ -34,6 +46,12 @@ export default function ProjectsPage() {
 
     fetchProjects();
   }, []);
+
+  // Use socket hook
+  const { notifications, emitEvent } = useSocket(
+    "http://localhost:4000",
+    selectedProjectId
+  );
 
   const deleteProject = async (id) => {
     try {
@@ -129,6 +147,15 @@ export default function ProjectsPage() {
     <div className="flex w-screen h-screen justify-center items-center flex-col">
       <h1>Projects</h1>
 
+      <div>
+        <h2>Notifications</h2>
+        <ul>
+          {notifications.map((notification, index) => (
+            <li key={index}>{JSON.stringify(notification)}</li>
+          ))}
+        </ul>
+      </div>
+
       {projects.map((project) => (
         <div key={project.id}>
           <input
@@ -146,17 +173,32 @@ export default function ProjectsPage() {
               onChange={(e) => setUserId(e.target.value)}
               className="text-white bg-black"
             />
-            <button onClick={() => addUserToProject(project.id, userId, setError)}>Add User</button>
+            <button
+              onClick={() => addUserToProject(project.id, userId, setError)}
+            >
+              Add User
+            </button>
           </div>
           <div>
             <button onClick={() => fetchUsers(project.id)}>Show Users</button>
-            {project.users && project.users.map((user) => (
-              <div key={user.id}>
-                <span>{user.id}{user.name}</span>
-                <br />
-                <button className="font-bold" onClick={() => removeUserFromProject(project.id, user.id, setError)}>Remove</button>
-              </div>
-            ))}
+            {project.users &&
+              project.users.map((user) => (
+                <div key={user.id}>
+                  <span>
+                    {user.id}
+                    {user.name}
+                  </span>
+                  <br />
+                  <button
+                    className="font-bold"
+                    onClick={() =>
+                      removeUserFromProject(project.id, user.id, setError)
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
           </div>
         </div>
       ))}

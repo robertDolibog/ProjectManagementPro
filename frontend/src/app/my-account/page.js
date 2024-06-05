@@ -1,15 +1,12 @@
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/DQ7Ycstq007
- * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
- */
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
+import { FileUploader } from "@/components/Utils/FileUploader";
 
-export default function Component() {
+export default function MyAccount() {
   return (
     <div className="flex flex-col min-h-[100dvh]">
       {/* <header className="bg-gray-900 text-white px-6 py-4 flex items-center justify-between">
@@ -80,14 +77,12 @@ export default function Component() {
                     <AvatarFallback>JP</AvatarFallback>
                   </Avatar>
                   <div>
-                    <Button variant="outline">
-                      <UploadIcon className="mr-2 h-4 w-4" />
-                      Upload New Picture
-                    </Button>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       JPG, PNG, GIF up to 10MB
                     </p>
                   </div>
+                  <FileUploader />{" "}
+                  {/* FileUploader component implemented through Uploadcare */}
                 </div>
                 <Button className="ml-auto">Save</Button>
               </div>
@@ -96,26 +91,5 @@ export default function Component() {
         </div>
       </main>
     </div>
-  );
-}
-
-function UploadIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" x2="12" y1="3" y2="15" />
-    </svg>
   );
 }

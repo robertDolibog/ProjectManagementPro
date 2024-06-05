@@ -1,90 +1,122 @@
-const port = 4000,
-  express = require("express"),
-  app = express(),
-  cors = require("cors"),
-  path = require("path"),
-  indexRouter = require("./routes/index"),
-  layouts = require("express-ejs-layouts"),
-  cookieParser = require("cookie-parser"),
-  session = require("express-session"),
-  redis = require("redis"),
-  ConnectRedis = require("connect-redis").default,
-  socketIo = require("socket.io"),
-  { PrismaClient } = require("@prisma/client");
+const port = 4000;
+const express = require("express");
+const app = express();
+const cors = require("cors");
+const path = require("path");
+const indexRouter = require("./routes/index");
+const layouts = require("express-ejs-layouts");
+const session = require("express-session");
+const socketIo = require("socket.io");
+const { PrismaClient } = require("@prisma/client");
+const createRedisStore = require("./services/sessionStore");
+const setupSocketHandlers = require("./services/socketHandlers");
+const notificationService = require("./services/notificationService");
+const http = require("http").createServer(app);
 
 const prisma = new PrismaClient();
-const http = require("http").createServer(app);
 const io = socketIo(http);
 
-const redisClient = redis.createClient({
-  url: process.env.REDIS_SESSIONS_URL,
-  retry_strategy: function (options) {
-    if (options.error && options.error.code === "ECONNREFUSED") {
-      return new Error("The server refused the connection");
-    }
-    if (options.total_retry_time > 1000 * 60 * 60) {
-      return new Error("Retry time exhausted");
-    }
-    if (options.attempt > 10) {
-      return undefined;
-    }
-    return Math.min(options.attempt * 100, 3000);
-  },
-});
+async function createSessionStore() {
+  const redisStore = await createRedisStore();
+  return redisStore;
+}
 
-redisClient.on("error", function (err) {
-  console.error("Redis error: ", err);
-});
+createSessionStore()
+  .then((store) => {
+    app.use(
+      session({
+        store: store,
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie: { secure: process.env.NODE_ENV === "production" },
+      })
+    );
 
-const RedisStore = new ConnectRedis({ client: redisClient });
+    app.set("view engine", "ejs");
+    app.use(
+      cors({
+        origin: "http://localhost:3000", // replace with your frontend origin
+        credentials: true,
+      })
+    );
+    app.use(layouts);
+    app.use(express.static(path.join(__dirname, "public")));
+    app.use("/", indexRouter);
 
-app.use(
-  session({
-    store: RedisStore,
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === "production" },
-  })
-);
+    // Subscribe to Redis Pub/Sub channels with socket.io
+    notificationService.subscribe(io);
 
-app.set("view engine", "ejs");
-app.use(
-  cors({
-    origin: "http://localhost:3000", // replace with your frontend origin
-    credentials: true,
-  })
-);
-app.use(layouts);
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/", indexRouter);
+    // Setup socket handlers
+    setupSocketHandlers(io);
 
-io.on("connection", (socket) => {
-  socket.on("submitComment", async (commentData) => {
-    // Save the comment to the database
-    const comment = await prisma.comment.create({
-      data: commentData,
-    });
-
-    // Publish the comment to the Redis channel
-    redisClient.publish("comments", JSON.stringify(comment));
-  });
-});
-
-redisClient.on("message", (channel, message) => {
-  if (channel === "comments") {
-    // Emit the comment to all connected clients
-    io.emit("newComment", JSON.parse(message));
-  }
-});
-
-redisClient
-  .connect()
-  .then(() => {
     http.listen(port, () => {
-      console.log(`Server is listening on port ${port}`);
+      console.log(`Server is listening on port ${process.env.PORT || 4000}`);
     });
   })
   .catch((err) => {
     console.error("Failed to connect to Redis", err);
   });
+
+// require("dotenv").config();
+// const express = require("express");
+// const cors = require("cors");
+// const path = require("path");
+// const layouts = require("express-ejs-layouts");
+// const cookieParser = require("cookie-parser");
+// const session = require("express-session");
+// const http = require("http");
+// const socketIo = require("socket.io");
+// const { PrismaClient } = require("@prisma/client");
+// const createRedisStore = require("./services/sessionStore");
+// const indexRouter = require("./routes/index");
+// const notificationService = require("./services/notificationService");
+
+// const app = express();
+// const prisma = new PrismaClient();
+// const server = http.createServer(app);
+// const io = socketIo(server);
+
+// app.set("view engine", "ejs");
+// app.use(
+//   cors({
+//     origin: process.env.FRONTEND_ORIGIN, // Use environment variable
+//     credentials: true,
+//   })
+// );
+// app.use(layouts);
+// app.use(express.static(path.join(__dirname, "public")));
+// app.use(cookieParser());
+// app.use(express.json());
+
+// (async () => {
+//   const RedisStore = await createRedisStore();
+//   app.use(
+//     session({
+//       store: RedisStore,
+//       secret: process.env.SESSION_SECRET,
+//       resave: false,
+//       saveUninitialized: false,
+//       cookie: { secure: process.env.NODE_ENV === "production" },
+//     })
+//   );
+
+//   app.use("/", indexRouter);
+
+//   io.on("connection", (socket) => {
+//     socket.on("submitComment", async (commentData) => {
+//       try {
+//         const comment = await prisma.comment.create({ data: commentData });
+//         notificationService.publishComment(comment);
+//       } catch (error) {
+//         console.error("Error saving comment: ", error);
+//       }
+//     });
+//   });
+
+//   notificationService.subscribe(io);
+
+//   server.listen(process.env.PORT || 4000, () => {
+//     console.log(`Server is listening on port ${process.env.PORT || 4000}`);
+//   });
+// })();

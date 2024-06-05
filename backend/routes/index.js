@@ -96,7 +96,10 @@ router.delete("/projects/:projectId/users", async (req, res) => {
   const userId = req.body.userId;
   const projectId = req.params.projectId;
 
-  const user = await projectsController.removeUserFromProject(userId, projectId);
+  const user = await projectsController.removeUserFromProject(
+    userId,
+    projectId
+  );
   res.json(user);
 });
 

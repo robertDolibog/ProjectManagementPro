@@ -41,6 +41,14 @@ exports.getProjectUsers = async (projectId) => {
 exports.addUserToProject = async (userId, projectId) => {
   try {
     const user = await databaseController.addUserToProject(userId, projectId);
+
+    // Use the updated notificationService to publish the event
+    notificationService.publishEvent("userAdded", projectId, {
+      type: "USER_ADDED_TO_PROJECT",
+      projectId: projectId,
+      userId: userId,
+    });
+
     return user;
   } catch (error) {
     console.error("Error adding user to project:", error);
