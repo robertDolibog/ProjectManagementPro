@@ -6,7 +6,6 @@ import {
   removeUserFromProject,
 } from "@/components/MyProjectUserService";
 import { useEffect, useState } from "react";
-import useSocket from "../../hooks/useSocket";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
@@ -46,12 +45,6 @@ export default function ProjectsPage() {
 
     fetchProjects();
   }, []);
-
-  // Use socket hook
-  const { notifications, emitEvent } = useSocket(
-    "http://localhost:4000",
-    selectedProjectId
-  );
 
   const deleteProject = async (id) => {
     try {
@@ -146,15 +139,6 @@ export default function ProjectsPage() {
   return (
     <div className="flex w-screen h-screen justify-center items-center flex-col">
       <h1>Projects</h1>
-
-      <div>
-        <h2>Notifications</h2>
-        <ul>
-          {notifications.map((notification, index) => (
-            <li key={index}>{JSON.stringify(notification)}</li>
-          ))}
-        </ul>
-      </div>
 
       {projects.map((project) => (
         <div key={project.id}>

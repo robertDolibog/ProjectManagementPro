@@ -21,6 +21,9 @@ router.use((req, res, next) => {
 });
 
 // Define routes
+router.get("/", (req, res) => {
+  res.send("Hello from the Backend!");
+});
 
 router.post("/signup", userController.signup);
 
@@ -30,10 +33,6 @@ router.post("/signin", userController.signIn);
 router.get("/session", userController.getSession);
 
 router.get("/logout", userController.logout);
-
-router.get("/", (req, res) => {
-  res.send("Hello from the Backend!");
-});
 
 router.post("/projects", async (req, res) => {
   const { title, content } = req.body;
@@ -53,16 +52,6 @@ router.put("/projects/:id", async (req, res) => {
   const { title, content } = req.body;
   const project = await projectsController.updateProject(id, title, content);
 
-  // Emit the 'projectNameUpdated' event
-  io.emit("projectNameUpdated", project);
-
-  res.json(project);
-});
-
-router.patch("/projects/:id", async (req, res) => {
-  const { id } = req.params;
-  const { title, content } = req.body;
-  const project = await projectsController.updateProject(id, title, content);
   res.json(project);
 });
 
@@ -116,12 +105,16 @@ router.get("/projects/:projectId/users", async (req, res) => {
   }
 });
 
-router.post("/projects/:projectId/tasks", taskController.createTask);
-
-router.post("/", (req, res) => {
-  console.log(req.body);
-  console.log(req.query);
-  res.send("POST Successful!");
+router.post("/projects/:projectId/tasks", async (req, res) => {
+  const { title, content } = req.body;
+  const projectId = req.params;
+  const task = await taskController.createTask(title, content, projectId);
+  res.json(task);
 });
+router.get("/projects/:projectId/tasks", taskController.getTasks);
+
+router.put("/projects/:projectId/tasks/:taskId", taskController.updateTask);
+
+router.delete("/projects/:projectId/tasks/:taskId", taskController.deleteTask);
 
 module.exports = router;
