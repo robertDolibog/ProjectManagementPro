@@ -46,6 +46,17 @@ router.post("/projects", async (req, res) => {
   res.json(project);
 });
 
+router.get("/projects", async (req, res) => {
+  const id = req.session.user.id;
+  try {
+    const projects = await projectsController.getProjectsByUserId(id);
+    res.json(projects);
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    res.status(500).json({ message: "Error fetching projects in index" });
+  }
+});
+
 // When a project is updated, emit an event with the updated project data
 router.put("/projects/:id", async (req, res) => {
   const { id } = req.params;
@@ -61,16 +72,7 @@ router.delete("/projects/:id", async (req, res) => {
   res.json(project);
 });
 
-router.get("/projects", async (req, res) => {
-  const id = req.session.user.id;
-  try {
-    const projects = await projectsController.getProjectsByUserId(id);
-    res.json(projects);
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-    res.status(500).json({ message: "Error fetching projects in index" });
-  }
-});
+
 
 // Add a user to a project
 router.post("/projects/:projectId/users", async (req, res) => {
@@ -105,16 +107,35 @@ router.get("/projects/:projectId/users", async (req, res) => {
   }
 });
 
+//create task in project
 router.post("/projects/:projectId/tasks", async (req, res) => {
   const { title, content } = req.body;
   const projectId = req.params;
   const task = await taskController.createTask(title, content, projectId);
   res.json(task);
 });
-router.get("/projects/:projectId/tasks", taskController.getTasks);
 
-router.put("/projects/:projectId/tasks/:taskId", taskController.updateTask);
+//get all tasks by project id
+router.get("/projects/:projectId/tasks", async (req, res) => {
+  const projectId = req.params.projectId;
+  const tasks = await taskController.getTasksByProjectId(projectId);
+  res.json(tasks);
+});
 
-router.delete("/projects/:projectId/tasks/:taskId", taskController.deleteTask);
+//update task 
+router.put("/projects/tasks/:taskId", async (req, res) => {
+  const { title, content } = req.body;
+  const { id } = req.params.taskId;
+  const task = await taskController.updateTask(id, title, content);
+  res.json(task);
+
+});
+
+//delete task
+router.delete("/projects/tasks/:taskId", async (req, res) => {
+  const { id } = req.params.taskId;
+  const task = await taskController.deleteTask(id);
+  res.json(task);
+});
 
 module.exports = router;

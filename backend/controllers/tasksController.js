@@ -11,29 +11,29 @@ exports.createTask = async (title, content, projectId) => {
     );
 };
 
-exports.deleteTask = (taskId) => {
+exports.getTasksByProjectId = (projectId) => {
   databaseController
-    .deleteTask(taskId)
-    .then(() => res.status(200).send("Task deleted successfully"))
+    .getTasksByProjectId(projectId)
+    .then((tasks) => res.status(200).json(tasks))
     .catch((err) =>
-      res.status(500).send("Error deleting task: " + err.message)
+      res.status(500).send("Error fetching tasks: " + err.message)
     );
-};
+}
 
-exports.updateTask = (taskId, title, content) => {
+exports.updateTask = (id, title, content) => {
   databaseController
-    .updateTask(taskId, title, content)
+    .updateTask(id, title, content)
     .then(() => res.status(200).send("Task updated successfully"))
     .catch((err) =>
       res.status(500).send("Error updating task: " + err.message)
     );
 };
 
-exports.getTasks = (projectId) => {
+exports.deleteTask = (id) => {
   databaseController
-    .getTasks(projectId)
-    .then((tasks) => res.status(200).json(tasks))
+    .deleteTask(id)
+    .then(() => res.status(200).send("Task deleted successfully"))
     .catch((err) =>
-      res.status(500).send("Error fetching tasks: " + err.message)
+      res.status(500).send("Error deleting task: " + err.message)
     );
 };

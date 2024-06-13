@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const argon2 = require("argon2");
 const { request } = require("express");
+const { createTask, getTasksByProjectId, updateTask } = require("../controllers/tasksController");
 
 const prisma = new PrismaClient();
 
@@ -132,94 +133,82 @@ async function deleteProject(id) {
     throw new Error("Failed to delete project.");
   }
 }
-// Create a new task
-exports.createTask = async (req, res) => {
-  const { title, content, projectId } = req.body;
-  const userId = req.session.user.id;
 
+// Create a new task
+async function createTask(title, content, projectId) {
   try {
-    const task = await prisma.task.create({
+    const newTask = await prisma.task.create({
       data: {
         title,
         content,
-        projectId,
-        author: { connect: { id: userId } },
+        project: {
+          connect: {
+            id: Number(projectId),
+          },
+        },
       },
     });
 
-    res.status(201).json(task);
+    return newTask;
   } catch (error) {
-    res.status(500).json({ error: `Failed to create task: ${error.message}` });
+    console.error("Error in createTask:", error);
+    throw new Error("Failed to create task.");
   }
-};
-
-// Get all tasks
-exports.getTasks = async (req, res) => {
-  try {
-    const tasks = await prisma.task.findMany();
-    res.status(200).json(tasks);
-  } catch (error) {
-    res.status(500).json({ error: `Failed to fetch tasks: ${error.message}` });
-  }
-};
+}
 
 // Get tasks by project ID
-exports.getTasksByProjectId = async (projectId) => {
+async function getTasksByProjectId(projectId) {
   try {
     const tasks = await prisma.task.findMany({
       where: {
         projectId: Number(projectId),
       },
     });
+
     return tasks;
   } catch (error) {
-    console.error(
-      `Failed to fetch tasks for project ${projectId}: ${error.message}`
-    );
-    return null;
+    console.error("Error in getTasksByProjectId:", error);
+    throw new Error("Failed to get tasks by project.");
   }
-};
-
-// Get a single task by ID
-exports.getTask = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const task = await prisma.task.findUnique({ where: { id: Number(id) } });
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ error: `Failed to fetch task: ${error.message}` });
-  }
-};
+}
 
 // Update a task
-exports.updateTask = async (req, res) => {
-  const { id } = req.params;
-  const { title, content } = req.body;
-
+async function updateTask(id, title, content) {
   try {
     const task = await prisma.task.update({
-      where: { id: Number(id) },
-      data: { title, content },
+      where: {
+        id: Number(id),
+      },
+      data: {
+        title,
+        content,
+      },
     });
 
-    res.status(200).json(task);
+    return task;
   } catch (error) {
-    res.status(500).json({ error: `Failed to update task: ${error.message}` });
+    console.error("Error in updateTask:", error);
+    throw new Error("Failed to update task.");
   }
-};
+}
 
 // Delete a task
-exports.deleteTask = async (req, res) => {
-  const { id } = req.params;
-
+async function deleteTask(id) {
   try {
-    await prisma.task.delete({ where: { id: Number(id) } });
-    res.status(204).send();
+    const task = await prisma.task.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    return task;
   } catch (error) {
-    res.status(500).json({ error: `Failed to delete task: ${error.message}` });
+    console.error("Error in deleteTask:", error);
+    throw new Error("Failed to delete task.");
   }
-};
+}
+
+
 async function addUserToProject(userId, projectId) {
   try {
     const newUserProject = await prisma.userProject.create({
@@ -284,4 +273,8 @@ module.exports = {
   addUserToProject,
   removeUserFromProject,
   getUsersByProjectId,
+  createTask,
+  getTasksByProjectId,
+  updateTask,
+  deleteTask,
 };
