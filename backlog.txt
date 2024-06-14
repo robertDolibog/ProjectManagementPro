@@ -5,11 +5,11 @@ User Stories
 
 User Registration and Authentication:
 As a user, I want to be able to register for an account using my email and password.
-As a registered user, I want to be able to securely log in to access my account.
+As a registered user, I want to be able to securely log in to access my account. ✅
 
 Create a Project:
 As a project manager, I want to be able to create a new project with a name, description, and other relevant details.
-As a project manager, I want to be able to assign team members to the project.
+As a project manager, I want to be able to assign team members to the project.  (✅)
 
 View Project Details:
 As a team member, I want to be able to view the details of a project, including its description, assigned team members, and other related information.
@@ -18,16 +18,16 @@ Update Project Details:
 As a project manager, I want to be able to update the details of a project, such as its name, description, and assigned team members.
 
 Delete Project:
-As a project manager, I want to be able to delete a project from the system if it is no longer needed.
+As a project manager, I want to be able to delete a project from the system if it is no longer needed.✅
 
 Create Task within Project:
-As a project manager, I want to be able to create tasks within a project, including details like title, description, due date, and assigned team members.
+As a project manager, I want to be able to create tasks within a project, including details like title, description, due date, and assigned team members.✅
 
 Update Task Details:
 As a team member, I want to be able to update the details of a task within a project, such as its title, description, due date, and assigned team members.
 
 Delete Task
-As a team member, I want to be able to delete a task from a project if it is no longer relevant.
+As a team member, I want to be able to delete a task from a project if it is no longer relevant.✅
 
 Assign Task to Team Member:
 As a project manager, I want to be able to assign tasks to specific team members within a project.
