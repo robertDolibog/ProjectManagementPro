@@ -1,7 +1,11 @@
 const { PrismaClient } = require("@prisma/client");
 const argon2 = require("argon2");
 const { request } = require("express");
-const { createTask, getTasksByProjectId, updateTask } = require("../controllers/tasksController");
+const {
+  createTask,
+  getTasksByProjectId,
+  updateTask,
+} = require("../controllers/tasksController");
 
 const prisma = new PrismaClient();
 
@@ -135,7 +139,7 @@ async function deleteProject(id) {
 }
 
 // Create a new task
-async function createTask(title, content, projectId) {
+async function createTaskDb(title, content, projectId) {
   try {
     const newTask = await prisma.task.create({
       data: {
@@ -157,7 +161,7 @@ async function createTask(title, content, projectId) {
 }
 
 // Get tasks by project ID
-async function getTasksByProjectId(projectId) {
+async function getTasksByProjectIdDb(projectId) {
   try {
     const tasks = await prisma.task.findMany({
       where: {
@@ -173,7 +177,7 @@ async function getTasksByProjectId(projectId) {
 }
 
 // Update a task
-async function updateTask(id, title, content) {
+async function updateTaskDb(id, title, content) {
   try {
     const task = await prisma.task.update({
       where: {
@@ -193,7 +197,7 @@ async function updateTask(id, title, content) {
 }
 
 // Delete a task
-async function deleteTask(id) {
+async function deleteTaskDb(id) {
   try {
     const task = await prisma.task.delete({
       where: {
@@ -207,7 +211,6 @@ async function deleteTask(id) {
     throw new Error("Failed to delete task.");
   }
 }
-
 
 async function addUserToProject(userId, projectId) {
   try {
@@ -273,8 +276,8 @@ module.exports = {
   addUserToProject,
   removeUserFromProject,
   getUsersByProjectId,
-  createTask,
-  getTasksByProjectId,
-  updateTask,
-  deleteTask,
+  createTaskDb,
+  getTasksByProjectIdDb,
+  updateTaskDb,
+  deleteTaskDb,
 };

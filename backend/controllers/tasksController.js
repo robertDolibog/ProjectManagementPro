@@ -4,7 +4,7 @@ const databaseController = require("../database/databaseController");
 
 exports.createTask = async (title, content, projectId) => {
   databaseController
-    .createTask(title, content, projectId)
+    .createTaskDb(title, content, projectId)
     .then(() => res.status(201).send("Task created successfully"))
     .catch((err) =>
       res.status(500).send("Error creating task: " + err.message)
@@ -13,16 +13,16 @@ exports.createTask = async (title, content, projectId) => {
 
 exports.getTasksByProjectId = (projectId) => {
   databaseController
-    .getTasksByProjectId(projectId)
+    .getTasksByProjectIdDb(projectId)
     .then((tasks) => res.status(200).json(tasks))
     .catch((err) =>
       res.status(500).send("Error fetching tasks: " + err.message)
     );
-}
+};
 
 exports.updateTask = (id, title, content) => {
   databaseController
-    .updateTask(id, title, content)
+    .updateTaskDb(id, title, content)
     .then(() => res.status(200).send("Task updated successfully"))
     .catch((err) =>
       res.status(500).send("Error updating task: " + err.message)
@@ -31,7 +31,7 @@ exports.updateTask = (id, title, content) => {
 
 exports.deleteTask = (id) => {
   databaseController
-    .deleteTask(id)
+    .deleteTaskDb(id)
     .then(() => res.status(200).send("Task deleted successfully"))
     .catch((err) =>
       res.status(500).send("Error deleting task: " + err.message)
