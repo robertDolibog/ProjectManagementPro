@@ -8,31 +8,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Project {
-  id              Int              @id @default(autoincrement())
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  title           String           @db.VarChar(255)
-  content         String?
-  published       Boolean          @default(false)
-  users           UserProject[]
-  tasks           Task[]           @relation("ProjectToTask")
-  comments        Comment[]
-  customProperties CustomProperty[] @relation("CustomPropertyToProject")
+model Page {
+  id                Int            @id @default(autoincrement())
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  title             String         @db.VarChar(255)
+  contentBlocks     ContentBlock[]
+  published         Boolean        @default(false)
+  users             UserPage[]
+  customProperties  CustomProperty[] @relation("CustomPropertyToPage")
+  parentId          Int?           @map("parent_id") // Optional parent page ID
+  parent            Page?          @relation("PageToPage_parent", fields: [parentId], references: [id]) // Self-relation for parent page
+  children          Page[]         @relation("PageToPage_parent") // Self-relation for child pages
 }
 
-model Task {
-  id              Int              @id @default(autoincrement())
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  title           String           @db.VarChar(255)
-  content         String?
-  published       Boolean          @default(false)
-  author          User             @relation("TaskToUser", fields: [userId], references: [id])
-  userId          Int              @map("userId")
-  projectId       Int              @map("projectId")
-  project         Project          @relation("ProjectToTask", fields: [projectId], references: [id])
-  customProperties CustomProperty[] @relation("CustomPropertyToTask")
+model ContentBlock {
+  id        Int             @id @default(autoincrement())
+  type      ContentType     // Enum for content block type
+  data      Json            // Store content data as JSON for flexibility
+  pageId    Int             // Connect each content block to a Page
+  page      Page            @relation(fields: [pageId], references: [id])
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([pageId], name: "idx_content_block_page")
+}
+
+enum ContentType {
+  HEADING
+  TEXT
+  LINK
+  CHECKBOX
+  IMAGE
+  // Add more types as needed
 }
 
 model CustomProperty {
@@ -40,14 +48,11 @@ model CustomProperty {
   key             String
   value           String           // Store the value as a string, can be parsed in application code
   type            CustomPropertyType
-  projectId       Int?             // Nullable: Indicates this property belongs to a Project
-  taskId          Int?             // Nullable: Indicates this property belongs to a Task
-  project         Project?         @relation("CustomPropertyToProject", fields: [projectId], references: [id])
-  task            Task?            @relation("CustomPropertyToTask", fields: [taskId], references: [id])
+  pageId          Int?             // Indicates this property belongs to a Page
+  page            Page?            @relation("CustomPropertyToPage", fields: [pageId], references: [id])
   options         CustomPropertyOption[] @relation("CustomPropertyToOptions") // Relation to store options for select/multi-select types
 
-  @@index([projectId], name: "idx_custom_property_project")
-  @@index([taskId], name: "idx_custom_property_task")
+  @@index([pageId], name: "idx_custom_property_page")
 }
 
 model CustomPropertyOption {
@@ -67,31 +72,19 @@ enum CustomPropertyType {
   URL
 }
 
-model Comment {
-  id         Int      @id @default(autoincrement())
-  createdAt  DateTime @default(now())
-  content    String
-  author     User     @relation(fields: [userId], references: [id])
-  userId     Int
-  project    Project  @relation(fields: [projectId], references: [id])
-  projectId  Int
-}
-
 model User {
   id         Int       @id @default(autoincrement())
   email      String    @unique
   name       String?
   password   String?
-  projects   UserProject[]
-  tasks      Task[]    @relation("TaskToUser")
-  comments   Comment[]
+  pages      UserPage[]
 }
 
-model UserProject {
+model UserPage {
   userId     Int
-  projectId  Int
+  pageId     Int
   user       User     @relation(fields: [userId], references: [id])
-  project    Project  @relation(fields: [projectId], references: [id])
+  page       Page     @relation(fields: [pageId], references: [id])
 
-  @@id([userId, projectId])
+  @@id([userId, pageId])
 }

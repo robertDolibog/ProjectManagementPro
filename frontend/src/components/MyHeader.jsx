@@ -4,7 +4,6 @@ import Link from "next/link";
 import { IoMenu } from "react-icons/io5";
 import { LuBriefcase, LuCalendar, LuGrid, LuList } from "react-icons/lu";
 import NotificationBell from "./NotificationBell";
-import { UserNav } from "./user-nav";
 
 export default function MyHeader() {
   return (
@@ -76,7 +75,7 @@ export default function MyHeader() {
             </div>
           </SheetContent>
         </Sheet>
-        <UserNav />
+
         <NotificationBell />
       </div>
     </header>

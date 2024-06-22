@@ -50,234 +50,116 @@ async function authenticateUser(email, password) {
   // If the user is not found or the passwords don't match, return null
   return null;
 }
-async function getProjectsByUserId(userId) {
-  const parsedUserId = parseInt(userId);
 
-  if (isNaN(parsedUserId)) {
-    // userId cannot be converted to an integer
-    return [];
-  }
-
-  const userProjects = await prisma.userProject.findMany({
-    where: {
-      userId: parsedUserId,
-    },
-    include: {
-      project: true,
-    },
-  });
-
-  // Extract the projects from the userProjects array
-  const projects = userProjects.map((userProject) => userProject.project);
-
-  return projects || [];
-}
-
-async function createProject(title, content, session) {
-  if (!title || !content) {
-    console.error(
-      "Title, content, and userId are required. Received:",
-      title,
-      content
-    );
-  }
-
-  console.log(session);
-
-  const userId = session.user.id;
-
-  const project = await prisma.project.create({
+async function createPage(title, content, userId, parentId = null) {
+  const newPage = await prisma.page.create({
     data: {
-      title: title,
-      content: content,
-      users: {
+      title,
+      userId,
+      parentId,
+      contentBlocks: {
         create: {
-          userId: userId,
+          type: "TEXT",
+          data: content,
         },
       },
     },
   });
-  return project;
+
+  return newPage;
 }
 
-async function updateProject(id, title, content) {
-  id = Number(id);
-  console.log("props in update project", id, title, content);
-  const project = await prisma.project.update({
-    where: { id },
+// Function to fetch a single page by its ID
+async function getPage(pageId) {
+  const id = parseInt(pageId);
+
+  if (isNaN(id)) {
+    console.error("Page ID must be a valid number.");
+    return null;
+  }
+
+  const page = await prisma.page.findUnique({
+    where: {
+      id,
+    },
+  });
+
+  return page;
+}
+
+async function getChildPages(pageId) {
+  const id = parseInt(pageId);
+
+  if (isNaN(id)) {
+    console.error("Page ID must be a valid number.");
+    return null;
+  }
+
+  const children = await prisma.page.findMany({
+    where: {
+      parentId: id,
+    },
+  });
+
+  return children;
+}
+
+async function updatePage(pageId, title, content) {
+  const updatedPage = await prisma.page.update({
+    where: {
+      id: pageId,
+    },
     data: {
       title,
       content,
     },
   });
-  return project;
+
+  return updatedPage;
 }
 
-async function deleteProject(id) {
-  id = Number(id);
+async function deletePage(pageId) {
+  const id = parseInt(pageId);
 
-  try {
-    // Delete the associated users from the UserProject table
-    await prisma.userProject.deleteMany({
+  if (isNaN(id)) {
+    console.error("Page ID must be a valid number.");
+    return null;
+  }
+
+  // Recursive function to delete a page and its child pages
+  async function deletePageAndChildren(pageId) {
+    // Find child pages
+    const children = await prisma.page.findMany({
       where: {
-        projectId: id,
+        parentId: pageId,
       },
     });
 
-    // Delete the project
-    const project = await prisma.project.delete({
+    // Recursively delete each child page
+    for (const child of children) {
+      await deletePageAndChildren(child.id);
+    }
+
+    // Delete the current page
+    await prisma.page.delete({
       where: {
-        id: id,
+        id: pageId,
       },
     });
-
-    return project;
-  } catch (error) {
-    console.error("Error in deleteProject:", error);
-    throw new Error("Failed to delete project.");
   }
-}
 
-// Create a new task
-async function createTaskDb(title, content, projectId) {
-  try {
-    const newTask = await prisma.task.create({
-      data: {
-        title,
-        content,
-        project: {
-          connect: {
-            id: Number(projectId),
-          },
-        },
-      },
-    });
+  // Start the cascade delete from the specified page
+  await deletePageAndChildren(id);
 
-    return newTask;
-  } catch (error) {
-    console.error("Error in createTask:", error);
-    throw new Error("Failed to create task.");
-  }
-}
-
-// Get tasks by project ID
-async function getTasksByProjectIdDb(projectId) {
-  try {
-    const tasks = await prisma.task.findMany({
-      where: {
-        projectId: Number(projectId),
-      },
-    });
-
-    return tasks;
-  } catch (error) {
-    console.error("Error in getTasksByProjectId:", error);
-    throw new Error("Failed to get tasks by project.");
-  }
-}
-
-// Update a task
-async function updateTaskDb(id, title, content) {
-  try {
-    const task = await prisma.task.update({
-      where: {
-        id: Number(id),
-      },
-      data: {
-        title,
-        content,
-      },
-    });
-
-    return task;
-  } catch (error) {
-    console.error("Error in updateTask:", error);
-    throw new Error("Failed to update task.");
-  }
-}
-
-// Delete a task
-async function deleteTaskDb(id) {
-  try {
-    const task = await prisma.task.delete({
-      where: {
-        id: Number(id),
-      },
-    });
-
-    return task;
-  } catch (error) {
-    console.error("Error in deleteTask:", error);
-    throw new Error("Failed to delete task.");
-  }
-}
-
-async function addUserToProject(userId, projectId) {
-  try {
-    const newUserProject = await prisma.userProject.create({
-      data: {
-        userId: Number(userId),
-        projectId: Number(projectId),
-      },
-    });
-
-    return newUserProject;
-  } catch (error) {
-    console.error("Error in addUserToProject:", error);
-    throw new Error("Failed to add user to project.");
-  }
-}
-
-async function removeUserFromProject(userId, projectId) {
-  try {
-    const deleteUserProject = await prisma.userProject.delete({
-      where: {
-        userId_projectId: {
-          userId: Number(userId),
-          projectId: Number(projectId),
-        },
-      },
-    });
-
-    return deleteUserProject;
-  } catch (error) {
-    console.error("Error in removeUserFromProject:", error);
-    throw new Error("Failed to remove user from project.");
-  }
-}
-
-async function getUsersByProjectId(projectId) {
-  try {
-    const users = await prisma.user.findMany({
-      where: {
-        projects: {
-          some: {
-            projectId: Number(projectId),
-          },
-        },
-      },
-    });
-    //console.log(users.json);
-
-    return users;
-  } catch (error) {
-    console.error("Error in getUsersByProjectId:", error);
-    throw new Error("Failed to get users by project.");
-  }
+  return { message: "Page and subpages deleted successfully." };
 }
 
 module.exports = {
   createUser,
   authenticateUser,
-  getProjectsByUserId,
-  createProject,
-  updateProject,
-  deleteProject,
-  addUserToProject,
-  removeUserFromProject,
-  getUsersByProjectId,
-  createTaskDb,
-  getTasksByProjectIdDb,
-  updateTaskDb,
-  deleteTaskDb,
+  createPage,
+  getPage,
+  getChildPages,
+  updatePage,
+  deletePage,
 };
