@@ -14,6 +14,7 @@ model Page {
   updatedAt         DateTime       @updatedAt
   title             String         @db.VarChar(255)
   contentBlocks     ContentBlock[]
+  editorData        Json           
   published         Boolean        @default(false)
   users             UserPage[]
   customProperties  CustomProperty[] @relation("CustomPropertyToPage")
@@ -35,7 +36,9 @@ model ContentBlock {
 }
 
 enum ContentType {
-  HEADING
+  HEADING1
+  HEADING2
+  HEADING3
   TEXT
   LINK
   CHECKBOX

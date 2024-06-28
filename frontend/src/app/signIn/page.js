@@ -41,6 +41,7 @@ export default function LoginForm() {
       if (response.ok) {
         // Sign-in or sign-up was successful
         // Redirect to the user's projects page
+
         router.push("/");
       } else {
         // Sign-in or sign-up failed

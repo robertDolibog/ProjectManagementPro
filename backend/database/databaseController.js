@@ -1,31 +1,92 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, ContentType } = require("@prisma/client");
 const argon2 = require("argon2");
 const { request } = require("express");
-const {
-  createTask,
-  getTasksByProjectId,
-  updateTask,
-} = require("../controllers/tasksController");
 
 const prisma = new PrismaClient();
 
+async function createContentBlock(pageId, type, data) {
+  const newContentBlock = await prisma.contentBlock.create({
+    data: {
+      type,
+      data,
+      pageId,
+    },
+  });
+
+  return newContentBlock;
+}
 async function createUser(username, email, password) {
   const hashedPassword = await argon2.hash(password);
 
   try {
-    const newUser = await prisma.user.create({
-      data: {
-        name: username,
-        email: email,
-        password: hashedPassword,
-      },
+    const result = await prisma.$transaction(async (prisma) => {
+      const newUser = await prisma.user.create({
+        data: {
+          name: username,
+          email: email,
+          password: hashedPassword,
+        },
+      });
+
+      console.log("New User Created:", newUser);
+
+      const initialPage = await prisma.page.create({
+        data: {
+          title: "Home",
+          users: {
+            create: [
+              {
+                user: {
+                  connect: { id: newUser.id },
+                },
+              },
+            ],
+          },
+          contentBlocks: {
+            create: [
+              {
+                type: ContentType.TEXT,
+                data: {
+                  rich_text: [
+                    {
+                      type: "text",
+                      text: {
+                        content: "Lacinato kale",
+                        link: null,
+                      },
+                      annotations: {
+                        bold: false,
+                        italic: false,
+                        strikethrough: false,
+                        underline: false,
+                        code: false,
+                        color: "green",
+                      },
+                      plain_text: "Lacinato kale",
+                      href: null,
+                    },
+                  ],
+                  color: "default",
+                  is_toggleable: false,
+                },
+              },
+            ],
+          },
+        },
+        include: {
+          contentBlocks: true,
+        },
+      });
+      console.log("Initial Page Created:", initialPage);
+
+      return newUser; // Assuming you only need to return the newUser
     });
 
-    return newUser;
+    console.log("Transaction Successful:", result);
+    return result;
   } catch (error) {
-    console.log("Error instance: ", error.constructor.name); // Logs the actual instance of the error
-    console.log("Error code: ", error.code); // Logs the actual error code
-    throw new Error("A user account with this email already exists.");
+    console.error("Transaction Failed:", error);
+    throw error;
   }
 }
 
@@ -55,14 +116,16 @@ async function createPage(title, content, userId, parentId = null) {
   const newPage = await prisma.page.create({
     data: {
       title,
-      userId,
-      parentId,
       contentBlocks: {
-        create: {
-          type: "TEXT",
-          data: content,
-        },
+        create: content.map((block) => ({
+          type: block.type,
+          data: block.data,
+        })),
       },
+      users: {
+        connect: { id: userId },
+      },
+      parentId,
     },
   });
 
@@ -82,11 +145,32 @@ async function getPage(pageId) {
     where: {
       id,
     },
+    include: {
+      contentBlocks: true,
+    },
   });
 
   return page;
 }
 
+async function getAllPages(userId) {
+  const pages = await prisma.page.findMany({
+    where: {
+      users: {
+        some: {
+          userId: userId,
+        },
+      },
+    },
+    include: {
+      contentBlocks: true,
+    },
+  });
+
+  return pages;
+}
+
+// Function to fetch all child pages of a given page
 async function getChildPages(pageId) {
   const id = parseInt(pageId);
 
@@ -111,7 +195,12 @@ async function updatePage(pageId, title, content) {
     },
     data: {
       title,
-      content,
+      contentBlocks: {
+        create: content.map((block) => ({
+          type: block.type,
+          data: block.data,
+        })),
+      },
     },
   });
 
@@ -159,6 +248,7 @@ module.exports = {
   authenticateUser,
   createPage,
   getPage,
+  getAllPages,
   getChildPages,
   updatePage,
   deletePage,

@@ -10,7 +10,13 @@ exports.createPage = async (title, content, userId, parentId = null) => {
 exports.getPage = async (pageId) => {
   const page = await databaseController.getPage(pageId);
   const children = await databaseController.getChildPages(pageId);
+  console.log("page in backend", page);
   return { ...page, children };
+};
+
+// Read all pages
+exports.getAllPages = async (userId) => {
+  return await databaseController.getAllPages(userId);
 };
 
 // Update a page by ID

@@ -39,6 +39,8 @@ router.get("/logout", userController.logout);
 // Create a page
 // index.js
 router.post("/pages", async (req, res) => {
+  console.log("pages route hit");
+
   const { title, content, parentId } = req.body; // Include parentId from the request body
   const session = req.session;
   const userId = session.user.id;
@@ -55,10 +57,19 @@ router.post("/pages", async (req, res) => {
   res.json(page);
 });
 // Read a page by ID
-router.get("/pages/:id", async (req, res) => {
-  const { pageId } = req.params.id;
+router.get("/pages/:pageId", async (req, res) => {
+  const { pageId } = req.params; // Corrected destructuring assignment
+  console.log("pageId: ", pageId);
   const page = await pageController.getPage(pageId);
   res.json(page);
+});
+
+// Read all pages
+router.get("/pages", async (req, res) => {
+  const session = req.session;
+  const userId = session.user.id;
+  const pages = await pageController.getAllPages(userId);
+  res.json(pages);
 });
 
 // Update a page by ID
