@@ -41,3 +41,13 @@ So that I can discuss project details without delays.
 
 As a user, I want to receive real-time notifications about updates to tasks I am assigned,
 So that I am always informed of changes and progress.
+
+
+Secure RESTful API: As a user, I want my sessions to be securely verified at sign-in to ensure that my data is protected and accessible only when authenticated.
+
+Session Management: As a user, I want the system to check for an established session before allowing access to my account to prevent unauthorized access.
+
+Responsive Image Handling: As a user, I want the platform to handle image uploads efficiently, ensuring my images are stored securely and displayed correctly on my pages.
+
+Efficient Content Organization: As a user, I want my pages and content blocks to be stored and retrieved efficiently, providing a seamless experience when managing my content.
+
