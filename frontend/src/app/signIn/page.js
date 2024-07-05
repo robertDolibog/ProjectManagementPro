@@ -57,6 +57,7 @@ export default function LoginForm() {
     <main className=" h-screen flex flex-col justify-center items-center bg-black">
       <form
         onSubmit={handleSubmit}
+        suppressHydrationWarning={true}
         className="  w-auto flex flex-col items-center mt-12"
       >
         <section className="bg-green-800 z-20  flex flex-col w-[35vw] items-center px-20 py-10 rounded-lg">

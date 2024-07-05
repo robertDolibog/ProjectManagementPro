@@ -7,79 +7,93 @@ export default function Page({ params }) {
   const [page, setPage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [title, setTitle] = useState("");
+  const [editorData, setEditorData] = useState("");
+
+  async function fetchUpdatedPageData() {
+    const pageID = params.pageid;
+    try {
+      const response = await fetch(`http://localhost:4000/pages/${pageID}`, {
+        credentials: "include",
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const updatedPageData = await response.json();
+      console.log("Updated page data after save: ", updatedPageData);
+      setPage(updatedPageData);
+      setTitle(updatedPageData.title);
+      setEditorData(updatedPageData.editorData);
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch updated page data: ", error);
+    }
+  }
 
   useEffect(() => {
-    const getPage = async () => {
-      try {
-        console.log("fetch pages");
-        const pageID = params.pageid;
-        console.log(pageID);
-        const response = await fetch(`http://localhost:4000/pages/${pageID}`, {
-          credentials: "include",
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const page = await response.json();
-
-        setPage(page);
-      } catch (error) {
-        console.error("Error fetching page:", error);
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getPage();
+    fetchUpdatedPageData();
   }, [params.pageid]);
 
-  const handlePageSave = async (title, content) => {
+  const handleTitleBlur = async (event) => {
+    const newTitle = event.target.innerText;
+    setTitle(newTitle);
+
     try {
       await fetch(`http://localhost:4000/pages/${params.pageid}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ title: newTitle }),
+      });
+    } catch (error) {
+      console.error("Error saving title:", error);
+      setError(error);
+    }
+  };
+
+  const handlePageSave = async (title, editorData) => {
+    console.log("editorData in handle Page save: ", editorData);
+    const pageId = params.pageid;
+    const content = editorData;
+
+    try {
+      console.log("Saving page... - before call to backend ");
+      await fetch(`http://localhost:4000/pages/${pageId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ title, content }),
       });
-
-      // Refresh the page data after saving
-      const updatedPage = await fetch(
-        `http://localhost:4000/pages/${params.pageid}`
-      );
-      const updatedPageData = await updatedPage.json();
-      setPage(updatedPageData);
+      console.log("Page saved!");
     } catch (error) {
       console.error("Error saving block:", error);
       setError(error);
     }
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="text-white">Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
-
-  console.log("page", page);
 
   return (
     <div className="p-16">
-      <h1 contentEditable={true} className="m-10 text-neutral-100">
+      <h1
+        contentEditable={true}
+        className="m-10 text-neutral-100"
+        suppressContentEditableWarning={true}
+        onBlur={handleTitleBlur}
+      >
         {page.title}
       </h1>
-      {/* Hello {params.username}, you are currently viewing Page {params.pageid} */}
       <div>
-        {page.contentBlocks
-          ? page.contentBlocks.map((block) => (
-              // <InterpretBlock key={block.id} block={block} />
-              <Editor></Editor>
-            ))
-          : null}
+        <Editor
+          initialData={editorData}
+          onSave={(editorDocument) =>
+            handlePageSave(page.title, editorDocument)
+          }
+        />
       </div>
     </div>
   );

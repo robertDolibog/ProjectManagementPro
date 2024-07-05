@@ -72,6 +72,7 @@ async function createUser(username, email, password) {
               },
             ],
           },
+          editorData: {}, // Added empty JSON object for editorData
         },
         include: {
           contentBlocks: true,
@@ -187,23 +188,22 @@ async function getChildPages(pageId) {
 
   return children;
 }
+async function updatePage(pageId, updateData) {
+  const pageIdnum = parseInt(pageId);
 
-async function updatePage(pageId, title, content) {
+  console.log("updateData in DB COntroller: ", updateData);
+
   const updatedPage = await prisma.page.update({
     where: {
-      id: pageId,
+      id: pageIdnum,
     },
     data: {
-      title,
-      contentBlocks: {
-        create: content.map((block) => ({
-          type: block.type,
-          data: block.data,
-        })),
-      },
+      ...updateData,
+      // If contentBlocks needs to be updated differently, handle it here
+      // For example, if updateData contains contentBlocks, you might need to process it
+      // This is commented out for simplicity, assuming editorData is directly updated
     },
   });
-
   return updatedPage;
 }
 

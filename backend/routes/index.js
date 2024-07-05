@@ -71,15 +71,21 @@ router.get("/pages", async (req, res) => {
   const pages = await pageController.getAllPages(userId);
   res.json(pages);
 });
-
-// Update a page by ID
 router.put("/pages/:id", async (req, res) => {
-  const { pageId } = req.params.id;
+  const pageId = req.params.id;
   const { title, content } = req.body;
-  const page = await pageController.updatePage(pageId, title, content);
+
+  console.log("title arriving in backend index: ", title);
+  console.log("content arriving in backend index: ", content);
+
+  // Assuming updatePage can handle an object with either title, content, or both
+  const updateData = {};
+  if (title !== undefined) updateData.title = title;
+  if (content !== undefined) updateData.editorData = content;
+
+  const page = await pageController.updatePage(pageId, updateData);
   res.json(page);
 });
-
 // Delete a page by ID
 router.delete("/pages/:id", async (req, res) => {
   const { pageId } = req.params.id;

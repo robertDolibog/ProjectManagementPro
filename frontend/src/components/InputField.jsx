@@ -1,5 +1,3 @@
-import React from "react";
-
 export default function InputField({
   label,
   type,
@@ -21,6 +19,7 @@ export default function InputField({
         value={value} // controlled component
         onChange={onChange} // event handler
         autoComplete={autoComplete}
+        suppressHydrationWarning={true}
       />
     </div>
   );

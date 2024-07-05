@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <>
       <MyHeader />
-      <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <main className="flex min-h-screen flex-col items-center justify-between p-24 text-white">
         This is the root page of the Project Management Pro app.
       </main>
     </>
