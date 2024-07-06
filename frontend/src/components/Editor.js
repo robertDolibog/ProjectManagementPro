@@ -7,9 +7,7 @@ import {
   getDefaultReactSlashMenuItems,
 } from "@blocknote/react";
 import { uploadFile } from "@uploadcare/upload-client";
-import { useCompletion } from "ai/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { HiOutlineGlobeAlt } from "react-icons/hi";
 import { ImMagicWand } from "react-icons/im";
 
 async function saveToStorage(jsonBlocks) {
@@ -39,40 +37,38 @@ export default function Editor({ onSave, initialData }) {
     });
   }, [initialData]);
 
-  const { complete } = useCompletion({
-    id: "hackathon_starter",
-    api: "/api/generate",
-    onResponse: (response) => {
-      if (response.status === 429) {
-        return;
-      }
-      if (response.body) {
-        const reader = response.body.getReader();
-        let decoder = new TextDecoder();
-        reader.read().then(function processText({ done, value }) {
-          if (done) {
-            return;
-          }
-          let chunk = decoder.decode(value, { stream: true });
-          editor?._tiptapEditor.commands.insertContent(chunk);
-          reader.read().then(processText);
-        });
+  const callCompletionApi = async (editor, prompt) => {
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const jsonResponse = await response.json();
+      if (
+        jsonResponse &&
+        jsonResponse.choices &&
+        jsonResponse.choices.length > 0
+      ) {
+        const content = jsonResponse.choices[0].message.content;
+        editor._tiptapEditor.commands.insertContent(content);
       } else {
-        console.error("Response body is null");
+        console.error("Invalid response format or empty choices array");
       }
-    },
-    onError: (e) => {
-      console.error(e.message);
-    },
-  });
+    } catch (error) {
+      console.error("Error fetching or processing the response", error);
+    }
+  };
 
   const insertMagicAi = (editor) => {
-    complete(
-      getPrevText(editor._tiptapEditor, {
-        chars: 5000,
-        offset: 1,
-      })
-    );
+    const text = getPrevText(editor._tiptapEditor, {
+      chars: 5000,
+      offset: 1,
+    });
+    callCompletionApi(editor, text);
   };
 
   const insertMagicItem = (editor) => ({
@@ -101,29 +97,6 @@ export default function Editor({ onSave, initialData }) {
       "\n"
     );
   };
-
-  // const insertHelloWorldItem = (editor) => ({
-  //   title: "Insert Hello World",
-  //   onItemClick: () => {
-  //     // Block that the text cursor is currently in.
-  //     const currentBlock = editor.getTextCursorPosition().block;
-
-  //     // New block we want to insert.
-  //     const helloWorldBlock = {
-  //       type: "paragraph",
-  //       content: [
-  //         { type: "text", text: "Hello World", styles: { bold: true } },
-  //       ],
-  //     };
-
-  //     // Inserting the new block after the current one.
-  //     editor.insertBlocks([helloWorldBlock], currentBlock, "after");
-  //   },
-  //   aliases: ["helloworld", "hw"],
-  //   group: "Other",
-  //   icon: <HiOutlineGlobeAlt size={18} />,
-  //   subtext: "Used to insert a block with 'Hello World' below.",
-  // });
 
   const editor = useMemo(() => {
     if (initialContent.length === 0) {
