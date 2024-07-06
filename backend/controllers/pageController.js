@@ -10,7 +10,7 @@ exports.createPage = async (title, content, userId, parentId = null) => {
 exports.getPage = async (pageId) => {
   const page = await databaseController.getPage(pageId);
   const children = await databaseController.getChildPages(pageId);
-  console.log("page in backend", page);
+  //console.log("page in backend", page);
   return { ...page, children };
 };
 

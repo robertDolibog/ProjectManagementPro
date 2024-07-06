@@ -75,8 +75,8 @@ router.put("/pages/:id", async (req, res) => {
   const pageId = req.params.id;
   const { title, content } = req.body;
 
-  console.log("title arriving in backend index: ", title);
-  console.log("content arriving in backend index: ", content);
+  //console.log("title arriving in backend index: ", title);
+  //console.log("content arriving in backend index: ", content);
 
   // Assuming updatePage can handle an object with either title, content, or both
   const updateData = {};

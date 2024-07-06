@@ -1,9 +1,16 @@
-import { BlockNoteEditor } from "@blocknote/core";
+import { BlockNoteEditor, filterSuggestionItems } from "@blocknote/core";
 import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
+import {
+  SuggestionMenuController,
+  getDefaultReactSlashMenuItems,
+} from "@blocknote/react";
 import { uploadFile } from "@uploadcare/upload-client";
-import { useEffect, useMemo, useState } from "react";
+import { useCompletion } from "ai/react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { HiOutlineGlobeAlt } from "react-icons/hi";
+import { ImMagicWand } from "react-icons/im";
 
 async function saveToStorage(jsonBlocks) {
   localStorage.setItem("editorContent", JSON.stringify(jsonBlocks));
@@ -15,23 +22,116 @@ async function loadFromStorage() {
 }
 
 export default function Editor({ onSave, initialData }) {
-  const [initialContent, setInitialContent] = useState("loading");
+  const [initialContent, setInitialContent] = useState([]);
+  const editorRef = useRef(null);
 
   useEffect(() => {
     console.log("Initial Data in Editor: ", initialData);
 
     loadFromStorage().then((content) => {
       console.log("Content from storage: ", content);
-      setInitialContent(initialData);
+      const newContent = initialData ||
+        content || [{ type: "paragraph", content: [] }];
+      // Only update if different to prevent loop
+      if (JSON.stringify(newContent) !== JSON.stringify(initialContent)) {
+        setInitialContent(newContent);
+      }
     });
   }, [initialData]);
 
+  const { complete } = useCompletion({
+    id: "hackathon_starter",
+    api: "/api/generate",
+    onResponse: (response) => {
+      if (response.status === 429) {
+        return;
+      }
+      if (response.body) {
+        const reader = response.body.getReader();
+        let decoder = new TextDecoder();
+        reader.read().then(function processText({ done, value }) {
+          if (done) {
+            return;
+          }
+          let chunk = decoder.decode(value, { stream: true });
+          editor?._tiptapEditor.commands.insertContent(chunk);
+          reader.read().then(processText);
+        });
+      } else {
+        console.error("Response body is null");
+      }
+    },
+    onError: (e) => {
+      console.error(e.message);
+    },
+  });
+
+  const insertMagicAi = (editor) => {
+    complete(
+      getPrevText(editor._tiptapEditor, {
+        chars: 5000,
+        offset: 1,
+      })
+    );
+  };
+
+  const insertMagicItem = (editor) => ({
+    title: "Continue with AI",
+    onItemClick: () => insertMagicAi(editor),
+    aliases: ["ai", "magic"],
+    group: "Magic",
+    icon: <ImMagicWand size={18} />,
+    hint: "Continue your idea with some extra inspiration!",
+  });
+
+  // List containing all default Slash Menu Items, as well as our custom one.
+  const getCustomSlashMenuItems = (editor) => [
+    insertMagicItem(editor),
+    ...getDefaultReactSlashMenuItems(editor),
+  ];
+
+  const getPrevText = (editor, { chars, offset = 0 }) => {
+    if (!editor?.state?.doc) {
+      console.error("Editor state or doc is undefined");
+      return "";
+    }
+    return editor.state.doc.textBetween(
+      Math.max(0, editor.state.selection.from - chars),
+      editor.state.selection.from - offset,
+      "\n"
+    );
+  };
+
+  // const insertHelloWorldItem = (editor) => ({
+  //   title: "Insert Hello World",
+  //   onItemClick: () => {
+  //     // Block that the text cursor is currently in.
+  //     const currentBlock = editor.getTextCursorPosition().block;
+
+  //     // New block we want to insert.
+  //     const helloWorldBlock = {
+  //       type: "paragraph",
+  //       content: [
+  //         { type: "text", text: "Hello World", styles: { bold: true } },
+  //       ],
+  //     };
+
+  //     // Inserting the new block after the current one.
+  //     editor.insertBlocks([helloWorldBlock], currentBlock, "after");
+  //   },
+  //   aliases: ["helloworld", "hw"],
+  //   group: "Other",
+  //   icon: <HiOutlineGlobeAlt size={18} />,
+  //   subtext: "Used to insert a block with 'Hello World' below.",
+  // });
+
   const editor = useMemo(() => {
-    if (initialContent === "loading") {
+    if (initialContent.length === 0) {
       return undefined;
     }
-    return BlockNoteEditor.create({
+    const newEditor = BlockNoteEditor.create({
       initialContent,
+      slashMenuItems: getCustomSlashMenuItems,
       uploadFile: async (file) => {
         return uploadFile(file, {
           publicKey: process.env.NEXT_PUBLIC_UPLOADCARE_PUBLIC_KEY,
@@ -42,9 +142,11 @@ export default function Editor({ onSave, initialData }) {
         });
       },
     });
+    editorRef.current = newEditor;
+    return newEditor;
   }, [initialContent]);
 
-  if (editor === undefined) {
+  if (!editor) {
     return "Loading content...";
   }
 
@@ -55,6 +157,15 @@ export default function Editor({ onSave, initialData }) {
         saveToStorage(editor.document);
         onSave(editor.document);
       }}
-    />
+      slashMenu={false}
+    >
+      <SuggestionMenuController
+        triggerCharacter={"/"}
+        // Replaces the default Slash Menu items with our custom ones.
+        getItems={async (query) =>
+          filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+        }
+      />
+    </BlockNoteView>
   );
 }
