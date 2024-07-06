@@ -28,8 +28,10 @@ export default function Editor({ onSave, initialData }) {
 
     loadFromStorage().then((content) => {
       console.log("Content from storage: ", content);
-      const newContent = initialData ||
-        content || [{ type: "paragraph", content: [] }];
+      const newContent =
+        initialData && Array.isArray(initialData) && initialData.length > 0
+          ? initialData
+          : content || [{ type: "paragraph", content: [] }];
       // Only update if different to prevent loop
       if (JSON.stringify(newContent) !== JSON.stringify(initialContent)) {
         setInitialContent(newContent);
