@@ -32,42 +32,12 @@ async function createUser(username, email, password) {
 
       const initialPage = await prisma.page.create({
         data: {
-          title: "Home",
+          title: "Getting Started",
           users: {
             create: [
               {
                 user: {
                   connect: { id: newUser.id },
-                },
-              },
-            ],
-          },
-          contentBlocks: {
-            create: [
-              {
-                type: ContentType.TEXT,
-                data: {
-                  rich_text: [
-                    {
-                      type: "text",
-                      text: {
-                        content: "Lacinato kale",
-                        link: null,
-                      },
-                      annotations: {
-                        bold: false,
-                        italic: false,
-                        strikethrough: false,
-                        underline: false,
-                        code: false,
-                        color: "green",
-                      },
-                      plain_text: "Lacinato kale",
-                      href: null,
-                    },
-                  ],
-                  color: "default",
-                  is_toggleable: false,
                 },
               },
             ],

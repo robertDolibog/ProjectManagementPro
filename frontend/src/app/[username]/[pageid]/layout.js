@@ -1,4 +1,4 @@
-import MyHeader from "../../../components/MyHeader";
+import Sidebar from "../../../components/Sidebar";
 
 export const metadata = {
   title: "Your App Dashboard",
@@ -8,8 +8,10 @@ export const metadata = {
 export default function AppLayout({ children }) {
   return (
     <div>
-      <MyHeader />
-      <main>{children}</main>
+      <div className="flex flex-row">
+        <Sidebar />
+        <main className=" w-[100%]">{children}</main>
+      </div>
     </div>
   );
 }

@@ -60,7 +60,7 @@ export default function LoginForm() {
         suppressHydrationWarning={true}
         className="  w-auto flex flex-col items-center mt-12"
       >
-        <section className="bg-green-800 z-20  flex flex-col w-[35vw] items-center px-20 py-10 rounded-lg">
+        <section className="bg-green-900 z-20  flex flex-col w-[35vw] items-center px-20 py-10 rounded-lg">
           <h1 className="text-white text-2xl font-bold">
             {isLogin ? "Login to see your Projects" : "Register for an account"}
           </h1>
