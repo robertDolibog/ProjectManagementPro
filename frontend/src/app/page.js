@@ -5,7 +5,8 @@ export default function Home() {
     <>
       <MyHeader />
       <main className="flex min-h-screen flex-col items-center justify-between p-24 text-white">
-        This is the root page of the Project Management Pro app.
+        This is the root page of the Project Management Pro app. To Be deleted
+        soon!
       </main>
     </>
   );
