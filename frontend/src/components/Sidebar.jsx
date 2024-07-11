@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { FaArrowsUpDown } from "react-icons/fa6";
 import { FiInbox } from "react-icons/fi";
 import { IoSearch, IoSettingsOutline } from "react-icons/io5";
+import { MdDeleteOutline, MdOutlinePostAdd } from "react-icons/md";
 import UserNav from "./UserNav";
 
 const Sidebar = () => {
@@ -28,8 +29,22 @@ const Sidebar = () => {
     fetchPages();
   }, []);
 
+  const createPage = async () => {
+    const response = await fetch("http://localhost:4000/pages", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title: "New Page", content: {} }),
+    });
+    const newPage = await response.json();
+    setPages([...pages, newPage]);
+  };
+
   // Example of a delete function
   const deletePage = async (pageId) => {
+    console.log("Deleting page with id: ", pageId);
     await fetch(`http://localhost:4000/pages/${pageId}`, {
       method: "DELETE",
       credentials: "include",
@@ -67,11 +82,22 @@ const Sidebar = () => {
         </Button>
       </nav>
       <div className="p-4 border-t border-gray-700">
-        <h2 className="text-xs font-semibold text-gray-400">Shared</h2>
+        <div className=" flex justify-between items-center">
+          <h2 className="text-xs font-semibold text-gray-400">Shared</h2>
+          <Button onClick={createPage}>
+            <MdOutlinePostAdd />
+          </Button>
+        </div>
         <div className="mt-2 space-y-1">
           <div>
             {pages.map((page) => (
-              <div key={page.id}>{page.title}</div>
+              <div key={page.id}>
+                <Link href={`/page/${page.id}`}>{page.title}</Link>{" "}
+                {/* Link to the page */}
+                <Button onClick={() => deletePage(page.id)}>
+                  <MdDeleteOutline />
+                </Button>{" "}
+              </div>
             ))}
           </div>
         </div>

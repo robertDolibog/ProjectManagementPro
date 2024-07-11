@@ -87,12 +87,7 @@ async function createPage(title, content, userId, parentId = null) {
   const newPage = await prisma.page.create({
     data: {
       title,
-      contentBlocks: {
-        create: content.map((block) => ({
-          type: block.type,
-          data: block.data,
-        })),
-      },
+      editorData: content,
       users: {
         connect: { id: userId },
       },
@@ -178,6 +173,7 @@ async function updatePage(pageId, updateData) {
 }
 
 async function deletePage(pageId) {
+  console.log("Deleting page with ID in backend:", pageId);
   const id = parseInt(pageId);
 
   if (isNaN(id)) {
@@ -185,26 +181,25 @@ async function deletePage(pageId) {
     return null;
   }
 
-  // Recursive function to delete a page and its child pages
+  // Assuming this function is within your databaseController.js or a similar file
+
   async function deletePageAndChildren(pageId) {
-    // Find child pages
-    const children = await prisma.page.findMany({
+    // First, delete or handle any references to the page in other tables
+    // For example, if UserPage references Page, you need to delete those references first
+    await prisma.userPage.deleteMany({
       where: {
-        parentId: pageId,
+        pageId: parseInt(pageId), // Ensure pageId is correctly typed
       },
     });
 
-    // Recursively delete each child page
-    for (const child of children) {
-      await deletePageAndChildren(child.id);
-    }
-
-    // Delete the current page
-    await prisma.page.delete({
+    // After handling references, delete the page itself
+    const deletedPage = await prisma.page.delete({
       where: {
-        id: pageId,
+        id: parseInt(pageId), // Ensure pageId is correctly typed
       },
     });
+
+    return deletedPage;
   }
 
   // Start the cascade delete from the specified page

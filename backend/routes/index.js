@@ -87,8 +87,9 @@ router.put("/pages/:id", async (req, res) => {
   res.json(page);
 });
 // Delete a page by ID
-router.delete("/pages/:id", async (req, res) => {
-  const { pageId } = req.params.id;
+router.delete("/pages/:pageId", async (req, res) => {
+  const { pageId } = req.params;
+  console.log("pageId: arriving in index: ", pageId);
   const page = await pageController.deletePage(pageId);
   res.json(page);
 });
