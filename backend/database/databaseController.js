@@ -1,26 +1,374 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, ContentType } = require("@prisma/client");
 const argon2 = require("argon2");
 const { request } = require("express");
 
 const prisma = new PrismaClient();
 
+const initialEditorData = [
+  {
+    id: "5e1aae1f-639d-426b-9f01-1bcf9ab21514",
+    type: "paragraph",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [
+      {
+        type: "text",
+        text: " This is your introduction to the app.",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "bd390fc5-4ef1-4655-a1e3-62ca58c42928",
+    type: "paragraph",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [],
+    children: [],
+  },
+  {
+    id: "fee76e02-074c-4396-9c42-636a256c1d3d",
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level: 2,
+    },
+    content: [
+      {
+        type: "text",
+        text: "<-- click the list icon to add a new page",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "ca39837b-990c-479f-a662-882b8fc3ad34",
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level: 2,
+    },
+    content: [
+      {
+        type: "text",
+        text: "<-- click the bin icon to delete a page",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "190b3295-8967-4173-be92-9e8a70e75ff4",
+    type: "paragraph",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [],
+    children: [],
+  },
+  {
+    id: "88f22ca3-03b2-4e08-be13-1e0a6849bb6b",
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level: 1,
+    },
+    content: [
+      {
+        type: "text",
+        text: "Heading 1",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "b77ced30-09ab-4187-9cbc-800edfce2f86",
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level: 2,
+    },
+    content: [
+      {
+        type: "text",
+        text: "Heading 2",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "29af3441-2945-4e71-ac76-5b9212cba269",
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level: 3,
+    },
+    content: [
+      {
+        type: "text",
+        text: "Heading 3",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "bbd00dc2-785a-453d-9f23-528b793a8dfe",
+    type: "paragraph",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [],
+    children: [],
+  },
+  {
+    id: "784ca37f-c43d-4df9-91bc-b9bbfb1e3e9f",
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level: 3,
+    },
+    content: [
+      {
+        type: "text",
+        text: "Lists:",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "e6e70075-72da-451f-b8b9-7d903d31a14d",
+    type: "numberedListItem",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [
+      {
+        type: "text",
+        text: "Item 1",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "4a520cd2-6ca8-4358-8649-526cfa778487",
+    type: "numberedListItem",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [
+      {
+        type: "text",
+        text: "Item 2",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "6849a08c-1364-40ab-9bfb-4f3ce3db54cc",
+    type: "numberedListItem",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [
+      {
+        type: "text",
+        text: "Item 3",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "e4e68ac5-d3c5-4899-8e89-8180132e4435",
+    type: "bulletListItem",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [
+      {
+        type: "text",
+        text: "Item 1",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "f7e3ec4f-b393-44ff-904a-1172b67a8db1",
+    type: "bulletListItem",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [
+      {
+        type: "text",
+        text: "Item 2",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "12adbbff-c45d-4398-b8f0-453584639fb6",
+    type: "bulletListItem",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [
+      {
+        type: "text",
+        text: "Item 3",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "b10c2500-35c4-4fbe-821e-ae4222e494d6",
+    type: "heading",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+      level: 3,
+    },
+    content: [
+      {
+        type: "text",
+        text: "List:",
+        styles: {},
+      },
+    ],
+    children: [],
+  },
+  {
+    id: "36698e37-a6fe-4bd5-a5e9-94384f89c399",
+    type: "table",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+    },
+    content: {
+      type: "tableContent",
+      rows: [
+        {
+          cells: [[], [], []],
+        },
+        {
+          cells: [[], [], []],
+        },
+      ],
+    },
+    children: [],
+  },
+  {
+    id: "1447da14-0779-4679-82a0-9063b7e89194",
+    type: "paragraph",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [],
+    children: [],
+  },
+  {
+    id: "d4ffa5ee-f17a-4243-8b33-52ccf85af93e",
+    type: "paragraph",
+    props: {
+      textColor: "default",
+      backgroundColor: "default",
+      textAlignment: "left",
+    },
+    content: [],
+    children: [],
+  },
+];
 async function createUser(username, email, password) {
   const hashedPassword = await argon2.hash(password);
 
   try {
-    const newUser = await prisma.user.create({
-      data: {
-        name: username,
-        email: email,
-        password: hashedPassword,
-      },
+    const result = await prisma.$transaction(async (prisma) => {
+      const newUser = await prisma.user.create({
+        data: {
+          name: username,
+          email: email,
+          password: hashedPassword,
+        },
+      });
+
+      console.log("New User Created:", newUser);
+
+      const initialPage = await prisma.page.create({
+        data: {
+          title: "Getting Started",
+          users: {
+            create: [
+              {
+                user: {
+                  connect: { id: newUser.id },
+                },
+              },
+            ],
+          },
+          editorData: initialEditorData, // Added empty JSON object for editorData
+        },
+        include: {
+          contentBlocks: true,
+        },
+      });
+      console.log("Initial Page Created:", initialPage);
+
+      return newUser; // Assuming you only need to return the newUser
     });
 
-    return newUser;
+    console.log("Transaction Successful:", result);
+    return result;
   } catch (error) {
-    console.log("Error instance: ", error.constructor.name); // Logs the actual instance of the error
-    console.log("Error code: ", error.code); // Logs the actual error code
-    throw new Error("A user account with this email already exists.");
+    console.error("Transaction Failed:", error);
+    throw error;
   }
 }
 
@@ -45,243 +393,142 @@ async function authenticateUser(email, password) {
   // If the user is not found or the passwords don't match, return null
   return null;
 }
-async function getProjectsByUserId(userId) {
-  const parsedUserId = parseInt(userId);
 
-  if (isNaN(parsedUserId)) {
-    // userId cannot be converted to an integer
-    return [];
-  }
-
-  const userProjects = await prisma.userProject.findMany({
-    where: {
-      userId: parsedUserId,
-    },
-    include: {
-      project: true,
+async function createPage(title, content, userId, parentId = null) {
+  const newPage = await prisma.page.create({
+    data: {
+      title,
+      editorData: content,
+      users: {
+        create: {
+          user: {
+            connect: { id: userId },
+          },
+        },
+      },
     },
   });
 
-  // Extract the projects from the userProjects array
-  const projects = userProjects.map((userProject) => userProject.project);
-
-  return projects || [];
+  return newPage;
 }
 
-async function createProject(title, content, session) {
-  if (!title || !content) {
-    console.error(
-      "Title, content, and userId are required. Received:",
-      title,
-      content
-    );
+// Function to fetch a single page by its ID
+async function getPage(pageId) {
+  const id = parseInt(pageId);
+
+  if (isNaN(id)) {
+    console.error("Page ID must be a valid number.");
+    return null;
   }
 
-  console.log(session);
+  const page = await prisma.page.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      contentBlocks: true,
+    },
+  });
 
-  const userId = session.user.id;
+  return page;
+}
 
-  const project = await prisma.project.create({
-    data: {
-      title: title,
-      content: content,
+async function getAllPages(userId) {
+  const pages = await prisma.page.findMany({
+    where: {
       users: {
-        create: {
+        some: {
           userId: userId,
         },
       },
     },
-  });
-  return project;
-}
-
-async function updateProject(id, title, content) {
-  id = Number(id);
-  console.log("props in update project", id, title, content);
-  const project = await prisma.project.update({
-    where: { id },
-    data: {
-      title,
-      content,
+    include: {
+      contentBlocks: true,
     },
   });
-  return project;
+
+  return pages;
 }
 
-async function deleteProject(id) {
-  id = Number(id);
+// Function to fetch all child pages of a given page
+async function getChildPages(pageId) {
+  const id = parseInt(pageId);
 
-  try {
-    // Delete the associated users from the UserProject table
-    await prisma.userProject.deleteMany({
-      where: {
-        projectId: id,
-      },
-    });
-
-    // Delete the project
-    const project = await prisma.project.delete({
-      where: {
-        id: id,
-      },
-    });
-
-    return project;
-  } catch (error) {
-    console.error("Error in deleteProject:", error);
-    throw new Error("Failed to delete project.");
-  }
-}
-// Create a new task
-exports.createTask = async (req, res) => {
-  const { title, content, projectId } = req.body;
-  const userId = req.session.user.id;
-
-  try {
-    const task = await prisma.task.create({
-      data: {
-        title,
-        content,
-        projectId,
-        author: { connect: { id: userId } },
-      },
-    });
-
-    res.status(201).json(task);
-  } catch (error) {
-    res.status(500).json({ error: `Failed to create task: ${error.message}` });
-  }
-};
-
-// Get all tasks
-exports.getTasks = async (req, res) => {
-  try {
-    const tasks = await prisma.task.findMany();
-    res.status(200).json(tasks);
-  } catch (error) {
-    res.status(500).json({ error: `Failed to fetch tasks: ${error.message}` });
-  }
-};
-
-// Get tasks by project ID
-exports.getTasksByProjectId = async (projectId) => {
-  try {
-    const tasks = await prisma.task.findMany({
-      where: {
-        projectId: Number(projectId),
-      },
-    });
-    return tasks;
-  } catch (error) {
-    console.error(
-      `Failed to fetch tasks for project ${projectId}: ${error.message}`
-    );
+  if (isNaN(id)) {
+    console.error("Page ID must be a valid number.");
     return null;
   }
-};
 
-// Get a single task by ID
-exports.getTask = async (req, res) => {
-  const { id } = req.params;
+  const children = await prisma.page.findMany({
+    where: {
+      parentId: id,
+    },
+  });
 
-  try {
-    const task = await prisma.task.findUnique({ where: { id: Number(id) } });
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ error: `Failed to fetch task: ${error.message}` });
-  }
-};
+  return children;
+}
+async function updatePage(pageId, updateData) {
+  const pageIdnum = parseInt(pageId);
 
-// Update a task
-exports.updateTask = async (req, res) => {
-  const { id } = req.params;
-  const { title, content } = req.body;
+  console.log("updateData in DB COntroller: ", updateData);
 
-  try {
-    const task = await prisma.task.update({
-      where: { id: Number(id) },
-      data: { title, content },
-    });
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ error: `Failed to update task: ${error.message}` });
-  }
-};
-
-// Delete a task
-exports.deleteTask = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    await prisma.task.delete({ where: { id: Number(id) } });
-    res.status(204).send();
-  } catch (error) {
-    res.status(500).json({ error: `Failed to delete task: ${error.message}` });
-  }
-};
-async function addUserToProject(userId, projectId) {
-  try {
-    const newUserProject = await prisma.userProject.create({
-      data: {
-        userId: Number(userId),
-        projectId: Number(projectId),
-      },
-    });
-
-    return newUserProject;
-  } catch (error) {
-    console.error("Error in addUserToProject:", error);
-    throw new Error("Failed to add user to project.");
-  }
+  const updatedPage = await prisma.page.update({
+    where: {
+      id: pageIdnum,
+    },
+    data: {
+      ...updateData,
+      // If contentBlocks needs to be updated differently, handle it here
+      // For example, if updateData contains contentBlocks, you might need to process it
+      // This is commented out for simplicity, assuming editorData is directly updated
+    },
+  });
+  return updatedPage;
 }
 
-async function removeUserFromProject(userId, projectId) {
-  try {
-    const deleteUserProject = await prisma.userProject.delete({
+async function deletePage(pageId) {
+  console.log("Deleting page with ID in backend:", pageId);
+  const id = parseInt(pageId);
+
+  if (isNaN(id)) {
+    console.error("Page ID must be a valid number.");
+    return null;
+  }
+
+  // Assuming this function is within your databaseController.js or a similar file
+
+  async function deletePageAndChildren(pageId) {
+    // First, delete or handle any references to the page in other tables
+    // For example, if UserPage references Page, you need to delete those references first
+    await prisma.userPage.deleteMany({
       where: {
-        userId_projectId: {
-          userId: Number(userId),
-          projectId: Number(projectId),
-        },
+        pageId: parseInt(pageId), // Ensure pageId is correctly typed
       },
     });
 
-    return deleteUserProject;
-  } catch (error) {
-    console.error("Error in removeUserFromProject:", error);
-    throw new Error("Failed to remove user from project.");
-  }
-}
-
-async function getUsersByProjectId(projectId) {
-  try {
-    const users = await prisma.user.findMany({
+    // After handling references, delete the page itself
+    const deletedPage = await prisma.page.delete({
       where: {
-        projects: {
-          some: {
-            projectId: Number(projectId),
-          },
-        },
+        id: parseInt(pageId), // Ensure pageId is correctly typed
       },
     });
-    //console.log(users.json);
 
-    return users;
-  } catch (error) {
-    console.error("Error in getUsersByProjectId:", error);
-    throw new Error("Failed to get users by project.");
+    return deletedPage;
   }
+
+  // Start the cascade delete from the specified page
+  await deletePageAndChildren(id);
+
+  return { message: "Page and subpages deleted successfully." };
 }
 
 module.exports = {
   createUser,
   authenticateUser,
-  getProjectsByUserId,
-  createProject,
-  updateProject,
-  deleteProject,
-  addUserToProject,
-  removeUserFromProject,
-  getUsersByProjectId,
+  createPage,
+  getPage,
+  getAllPages,
+  getChildPages,
+  updatePage,
+  deletePage,
 };

@@ -5,11 +5,7 @@ exports.signup = async (req, res) => {
     const { name: name, email, password } = req.body;
     //console.log(name, email, password);
     // Create a new user using the databaseController
-    const newUser = await databaseController.createUser(
-      name,
-      email,
-      password
-    );
+    const newUser = await databaseController.createUser(name, email, password);
 
     // If the user is created successfully, store their data in the session
     req.session.user = {
@@ -38,6 +34,8 @@ exports.signup = async (req, res) => {
 };
 exports.signIn = async (req, res) => {
   try {
+    console.log("im here");
+
     const { email, password } = req.body;
 
     console.log(`Attempting to authenticate user with email: ${email}`);
@@ -93,5 +91,3 @@ exports.getSession = (req, res) => {
     res.status(401).json({ message: "No session found" });
   }
 };
-
-

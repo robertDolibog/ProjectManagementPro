@@ -8,57 +8,86 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Project {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String   @db.VarChar(255)
-  content   String?
-  published Boolean  @default(false)
-  users     UserProject[] // New relation field
-  tasks     Task[]   @relation("ProjectToTask")
-  Comment Comment[]
+model Page {
+  id                Int            @id @default(autoincrement())
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  title             String         @db.VarChar(255)
+  contentBlocks     ContentBlock[]
+  editorData        Json           
+  published         Boolean        @default(false)
+  users             UserPage[]
+  customProperties  CustomProperty[] @relation("CustomPropertyToPage")
+  parentId          Int?           @map("parent_id") // Optional parent page ID
+  parent            Page?          @relation("PageToPage_parent", fields: [parentId], references: [id]) // Self-relation for parent page
+  children          Page[]         @relation("PageToPage_parent") // Self-relation for child pages
 }
 
-model Task {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String   @db.VarChar(255)
-  content   String?
-  published Boolean  @default(false)
-  author    User     @relation("TaskToUser", fields: [userId], references: [id])
-  userId    Int      @map("userId")
-  projectId Int      @map("projectId")
-  project   Project  @relation("ProjectToTask", fields: [projectId], references: [id])
+model ContentBlock {
+  id        Int             @id @default(autoincrement())
+  type      ContentType     // Enum for content block type
+  data      Json            // Store content data as JSON for flexibility
+  pageId    Int             // Connect each content block to a Page
+  page      Page            @relation(fields: [pageId], references: [id])
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([pageId], name: "idx_content_block_page")
 }
 
-model Comment {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  content   String
-  author    User     @relation(fields: [userId], references: [id])
-  userId    Int
-  project   Project  @relation(fields: [projectId], references: [id])
-  projectId Int
+enum ContentType {
+  HEADING1
+  HEADING2
+  HEADING3
+  TEXT
+  LINK
+  CHECKBOX
+  IMAGE
+  // Add more types as needed
+}
+
+model CustomProperty {
+  id              Int              @id @default(autoincrement())
+  key             String
+  value           String           // Store the value as a string, can be parsed in application code
+  type            CustomPropertyType
+  pageId          Int?             // Indicates this property belongs to a Page
+  page            Page?            @relation("CustomPropertyToPage", fields: [pageId], references: [id])
+  options         CustomPropertyOption[] @relation("CustomPropertyToOptions") // Relation to store options for select/multi-select types
+
+  @@index([pageId], name: "idx_custom_property_page")
+}
+
+model CustomPropertyOption {
+  id              Int              @id @default(autoincrement())
+  value           String           // Store the option value
+  customProperty  CustomProperty   @relation("CustomPropertyToOptions", fields: [customPropertyId], references: [id])
+  customPropertyId Int
+
+  @@index([customPropertyId], name: "idx_custom_property_option")
+}
+
+enum CustomPropertyType {
+  STRING
+  NUMBER
+  SELECT
+  MULTISELECT
+  URL
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  name     String?
-  password String?
-  projects UserProject[] // New relation field
-  tasks    Task[]    @relation("TaskToUser")
-  Comment Comment[]
+  id         Int       @id @default(autoincrement())
+  email      String    @unique
+  name       String?
+  password   String?
+  pages      UserPage[]
 }
 
+model UserPage {
+  userId     Int
+  pageId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  page       Page     @relation(fields: [pageId], references: [id])
 
-model UserProject {
-  userId    Int
-  projectId Int
-  user      User     @relation(fields: [userId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
-
-  @@id([userId, projectId])
+  @@id([userId, pageId])
 }

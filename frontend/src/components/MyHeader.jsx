@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Link from "next/link";
-import { FaBell } from "react-icons/fa";
 import { IoMenu } from "react-icons/io5";
 import { LuBriefcase, LuCalendar, LuGrid, LuList } from "react-icons/lu";
-import MyProfilePopover from "./MyProfilePopover";
+import NotificationBell from "./NotificationBell";
 
 export default function MyHeader() {
   return (
@@ -18,7 +17,7 @@ export default function MyHeader() {
           <Link className="hover:underline" href="/projects">
             Projects
           </Link>
-          <Link className="hover:underline" href="#">
+          <Link className="hover:underline" href="/tasks">
             Tasks
           </Link>
           <Link className="hover:underline" href="#">
@@ -76,10 +75,7 @@ export default function MyHeader() {
             </div>
           </SheetContent>
         </Sheet>
-        <MyProfilePopover />
-        <Button className="rounded-full" size="icon" variant="ghost">
-          <FaBell className="w-6 h-6" />
-        </Button>
+        <NotificationBell />
       </div>
     </header>
   );

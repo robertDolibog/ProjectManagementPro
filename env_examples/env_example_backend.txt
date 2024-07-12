@@ -1,0 +1,8 @@
+PORT=4000
+SESSION_SECRET="password"
+REDIS_SESSIONS_URL="redis://projectmanagementpro-redis_sessions-1:6379/0"
+REDIS_PUBSUB_URL="redis://projectmanagementpro-redis_pubsub-1:6379/0"
+DATABASE_URL="postgresql://admin:password@projectmanagementpro-db-1:5432/mydatabase"
+Node_ENV="development"
+FRONTEND_URL="http://localhost:3000"
+ABLY_API_KEY="YOUR API KEY"

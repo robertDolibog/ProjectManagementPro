@@ -1,88 +1,77 @@
-const port = 4000,
-  express = require("express"),
-  app = express(),
-  cors = require("cors"),
-  path = require("path"),
-  indexRouter = require("./routes/index"),
-  layouts = require("express-ejs-layouts"),
-  cookieParser = require("cookie-parser"),
-  session = require("express-session"),
-  redis = require("redis"),
-  ConnectRedis = require("connect-redis").default,
-  socketIo = require("socket.io"),
-  { PrismaClient } = require("@prisma/client");
+const port = 4000;
+const express = require("express");
+const app = express();
+const cors = require("cors");
+const path = require("path");
+const indexRouter = require("./routes/index");
+const layouts = require("express-ejs-layouts");
+const session = require("express-session");
+const Ably = require("ably");
 
-const prisma = new PrismaClient();
+const createRedisStore = require("./services/sessionStore");
+
 const http = require("http").createServer(app);
-const io = socketIo(http);
 
-const redisClient = redis.createClient({
-  url: process.env.REDIS_SESSIONS_URL,
-  retry_strategy: function (options) {
-    if (options.error && options.error.code === "ECONNREFUSED") {
-      return new Error("The server refused the connection");
-    }
-    if (options.total_retry_time > 1000 * 60 * 60) {
-      return new Error("Retry time exhausted");
-    }
-    if (options.attempt > 10) {
-      return undefined;
-    }
-    return Math.min(options.attempt * 100, 3000);
-  },
-});
+async function createSessionStore() {
+  const redisStore = await createRedisStore();
+  return redisStore;
+}
+const ably = new Ably.Realtime(process.env.ABLY_API_KEY);
+async function createAblyConnection() {
+  // For the full code sample see here: https://github.com/ably/quickstart-js
 
-redisClient.on("error", function (err) {
-  console.error("Redis error: ", err);
-});
+  await ably.connection.once("connected");
+  console.log("Connected to Ably!");
+}
 
-const RedisStore = new ConnectRedis({ client: redisClient });
+createAblyConnection();
+// get the channel to subscribe to
+const channel = ably.channels.get("quickstart");
 
-app.use(
-  session({
-    store: RedisStore,
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === "production" },
-  })
-);
-
-app.set("view engine", "ejs");
-app.use(
-  cors({
-    origin: "http://localhost:3000", // replace with your frontend origin
-    credentials: true,
-  })
-);
-app.use(layouts);
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/", indexRouter);
-
-io.on("connection", (socket) => {
-  socket.on("submitComment", async (commentData) => {
-    // Save the comment to the database
-    const comment = await prisma.comment.create({
-      data: commentData,
-    });
-
-    // Publish the comment to the Redis channel
-    redisClient.publish("comments", JSON.stringify(comment));
+/*
+  Subscribe to a channel.
+  The promise resolves when the channel is attached
+  (and resolves synchronously if the channel is already attached).
+*/
+async function subscribeToChannel() {
+  await channel.subscribe("greeting", (message) => {
+    console.log("Received a greeting message in realtime: " + message.data);
   });
-});
+}
 
-redisClient.on("message", (channel, message) => {
-  if (channel === "comments") {
-    // Emit the comment to all connected clients
-    io.emit("newComment", JSON.parse(message));
-  }
-});
+async function publishMessage() {
+  await channel.publish("greeting", "Hello, World!");
+}
 
-redisClient
-  .connect()
-  .then(() => {
+subscribeToChannel();
+publishMessage();
+
+createSessionStore()
+  .then((store) => {
+    app.use(
+      session({
+        store: store,
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie: { secure: process.env.NODE_ENV === "production" },
+      })
+    );
+
+    app.set("view engine", "ejs");
+    app.use(
+      cors({
+        origin: "http://localhost:3000", // replace with your frontend origin
+        credentials: true,
+      })
+    );
+
+    app.use(layouts);
+    app.use(express.static(path.join(__dirname, "public")));
+    app.use("/", indexRouter);
+
     http.listen(port, () => {
-      console.log(`Server is listening on port ${port}`);
+      console.log(`Server is listening on port ${process.env.PORT || 4000}`);
     });
   })
   .catch((err) => {

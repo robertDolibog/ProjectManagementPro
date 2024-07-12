@@ -2,14 +2,38 @@
 
 const databaseController = require("../database/databaseController");
 
-exports.createTask = (req, res) => {
-  const { title, description } = req.body;
-  const projectId = req.params.projectId;
-
+exports.createTask = async (title, content, projectId) => {
   databaseController
-    .createTask(title, description, projectId)
+    .createTaskDb(title, content, projectId)
     .then(() => res.status(201).send("Task created successfully"))
     .catch((err) =>
       res.status(500).send("Error creating task: " + err.message)
+    );
+};
+
+exports.getTasksByProjectId = (projectId) => {
+  databaseController
+    .getTasksByProjectIdDb(projectId)
+    .then((tasks) => res.status(200).json(tasks))
+    .catch((err) =>
+      res.status(500).send("Error fetching tasks: " + err.message)
+    );
+};
+
+exports.updateTask = (id, title, content) => {
+  databaseController
+    .updateTaskDb(id, title, content)
+    .then(() => res.status(200).send("Task updated successfully"))
+    .catch((err) =>
+      res.status(500).send("Error updating task: " + err.message)
+    );
+};
+
+exports.deleteTask = (id) => {
+  databaseController
+    .deleteTaskDb(id)
+    .then(() => res.status(200).send("Task deleted successfully"))
+    .catch((err) =>
+      res.status(500).send("Error deleting task: " + err.message)
     );
 };
