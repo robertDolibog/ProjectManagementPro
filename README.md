@@ -2,6 +2,9 @@
 
 This guide covers the necessary steps to set up the Project Management Pro application on a new machine and environment. The application consists of a frontend and a backend, each requiring specific environment variables and setup procedures.
 
+
+![Setup Guide](./frontend/public/CleanShot 2024-07-12 at 13.52.24.gif)
+
 ## Prerequisites
 
 - Docker and Docker Compose installed on your machine.
